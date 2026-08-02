@@ -97,6 +97,27 @@
   .stat-card.want{border-left:4px solid var(--ok);}
   .stat-card .sub{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
 
+  /* ---------- WEEK FILTER ---------- */
+  .week-section{margin-bottom:24px;}
+  .week-section h2{font-size:16px;margin-bottom:4px;}
+  .week-section .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
+  .week-buttons{display:flex;flex-wrap:wrap;gap:8px;}
+  .week-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;
+    background:var(--paper-card);color:var(--ink);border:1px solid var(--line);
+    border-radius:20px;padding:7px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;
+  }
+  .week-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .week-btn .wn{font-weight:600;}
+  .week-btn .wd{color:var(--ink-soft);font-size:10.5px;}
+  .week-btn .wc{
+    background:var(--line);color:var(--ink-soft);font-size:9.5px;border-radius:8px;padding:1px 6px;
+  }
+  .week-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .week-btn.active .wd{color:#B9C6D3;}
+  .week-btn.active .wc{background:rgba(255,255,255,0.2);color:#fff;}
+  .week-btn.reset{border-style:dashed;}
+
   /* ---------- GANTT ---------- */
   .gantt-section{margin-bottom:30px;}
   .gantt-section h2{font-size:16px;margin-bottom:4px;}
@@ -255,6 +276,16 @@
     </div>
   </div>
 
+  <!-- WEEK FILTER -->
+  <div class="week-section">
+    <h2>Filtrar por semana (ISO)</h2>
+    <div class="hint">
+      Clique numa semana para ver só as tarefas com data marcada para ela — nas tabelas abaixo e como faixa destacada no Gantt.
+      Clique de novo para tirar o filtro. Tarefas de 2027+ que só têm trimestre (sem dia exato) não aparecem em nenhum filtro de semana.
+    </div>
+    <div class="week-buttons" id="weekButtons"></div>
+  </div>
+
   <!-- GANTT -->
   <div class="gantt-section">
     <h2>Visão geral — Gantt por grupo</h2>
@@ -319,7 +350,7 @@ const TASKS = [
 {id:12,name:"Inventário de chaves — checar sistema existente + acionar lasesmed",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Låsesmed",start:"2026-09-01",end:"2026-09-06",cost:"—",hours:2,hoursEst:true,note:"Escopo ampliado: porta + postkasse + porão, \"ens nøgle\"",group:"B"},
 {id:13,name:"Transferir contas (fjernvarme, luz, água, internet)",type:"Admin",status:"Concluída",priority:"Crítica",resp:"Ariel",start:"2026-09-01",end:"2026-09-05",cost:"—",hours:1,hoursEst:true,note:"Luz/internet/VE-anlæg por Ariel; água/fjernvarme pela vendedora",group:"B"},
 {id:17,name:"Desmontar guarda-roupas embutidos + inspecionar paredes",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-02",end:"2026-09-04",cost:"—",hours:3,hoursEst:true,note:"Fotografar antes de remover",group:"B"},
-{id:18,name:"Remover carpetes + inspecionar subpiso",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-02",end:"2026-09-03",cost:"—",hours:2,hoursEst:true,note:"Momento de decidir rodapé — já decidido: troca",group:"B"},
+{id:18,name:"Remover carpetes + inspecionar subpiso",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel + Natalia",start:"2026-09-02",end:"2026-09-03",cost:"—",hours:2,hoursEst:true,note:"Momento de decidir rodapé — já decidido: troca",group:"B"},
 {id:82,name:"Bomba d'água — inspeção completa, limpeza, reset e manutenção",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-09-03",end:"2026-09-05",cost:"0–3.500",hours:3,hoursEst:true,note:"Continuação da #73. Se não resolver, VVS-mester como plano B",group:"B"},
 {id:83,name:"Solceller — cadastro no Vindstød para pristillæg",type:"Admin",status:"Em andamento",priority:"Normal",resp:"Ariel",start:"2026-08-02",end:null,cost:"—",hours:1,hoursEst:true,note:"Separado da transferência de propriedade do VE-anlæg (já feita)",group:"B"},
 // --- Grupo C ---
@@ -389,10 +420,10 @@ const TASKS = [
 {id:47,name:"Reencanamento (VVS) para novo layout",type:"Professional",status:"Não iniciada",priority:"Normal",resp:"VVS-installatør",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:16,hoursEst:true,note:"Sem início preenchido",group:"P6"},
 {id:45,name:"Projeto e instalação completa da cozinha",type:"Professional",status:"Não iniciada",priority:"Normal",resp:"Køkkenfirma",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:40,hoursEst:true,note:"Sem início preenchido",group:"P6"},
 // --- P7 Jardim 2026 ---
-{id:71,name:"Lavagem de alta pressão — pátio/calçada (musgo/algas)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-08-29",end:"2026-09-01",cost:"500",hours:3,hoursEst:false,note:"3h no plano original",group:"P7"},
+{id:71,name:"Lavagem de alta pressão — pátio/calçada (musgo/algas)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-03",end:"2026-10-04",cost:"500",hours:3,hoursEst:false,note:"3h no plano original · movido para outubro a pedido do Ariel (data exata não especificada)",group:"P7"},
 {id:84,name:"Macieira — checagem de frutos e folhas (outono)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-09-14",end:"2026-09-27",cost:"—",hours:1,hoursEst:true,note:"Separado de #68 — checar antes da queda outonal",group:"P7"},
-{id:69,name:"Cerejeira — anel de cobertura morta + iluminação",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-09-28",end:"2026-10-01",cost:"700",hours:3,hoursEst:false,note:"3h no plano original",group:"P7"},
-{id:67,name:"Reparo da cerca viva da frente — inspeção + plano híbrido",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-25",end:"2026-11-01",cost:"1.170",hours:6,hoursEst:false,note:"6h no plano original",group:"P7"},
+{id:69,name:"Cerejeira — anel de cobertura morta + iluminação",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-10",end:"2026-10-11",cost:"700",hours:3,hoursEst:false,note:"3h no plano original · movido para outubro a pedido do Ariel (data exata não especificada)",group:"P7"},
+{id:67,name:"Reparo da cerca viva da frente — inspeção + plano híbrido",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-17",end:"2026-10-24",cost:"1.170",hours:6,hoursEst:false,note:"6h no plano original · movido para outubro a pedido do Ariel (data exata não especificada)",group:"P7"},
 // --- P7b Jardim 2027 ---
 {id:68,name:"Macieira — primeira poda de renovação (inverno)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"400",hours:2,hoursEst:true,note:"Época de dormência",group:"P7b"},
 {id:36,name:"Trampolim enterrado — 380cm redondo",type:"Professional",status:"Não iniciada",priority:"Baixa",resp:"Anlægsgartner",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"6.500–16.000",hours:8,hoursEst:true,note:"Escavação de teste antes — histórico de enchente",group:"P7b"},
@@ -434,6 +465,45 @@ function statusClass(s){
   return "";
 }
 
+/* ======================= ISO WEEK HELPERS ======================= */
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toISODate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+
+// Returns {year, week, monday(Date)} for a given 'YYYY-MM-DD' string, using standard ISO-8601 week rules.
+function getISOWeek(dateStr){
+  const date = new Date(dateStr+'T00:00:00');
+  const dayNum = (date.getDay()+6)%7; // Mon=0 ... Sun=6
+  const thursday = new Date(date);
+  thursday.setDate(date.getDate() - dayNum + 3);
+  const firstThursday = new Date(thursday.getFullYear(),0,4);
+  const firstThursdayDayNum = (firstThursday.getDay()+6)%7;
+  firstThursday.setDate(firstThursday.getDate() - firstThursdayDayNum + 3);
+  const week = 1 + Math.round((thursday - firstThursday)/(7*DAY_MS_CONST));
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - dayNum);
+  return {year: thursday.getFullYear(), week: week, monday: monday};
+}
+const DAY_MS_CONST = 86400000;
+
+// Returns array of [weekKey, mondayDate] pairs a task touches. Quarter-only or dateless tasks return [].
+function taskWeeks(t){
+  if(t.quarter) return [];
+  const s = t.start || t.end;
+  const e = t.end || t.start;
+  if(!s) return [];
+  const startD = new Date(s+'T00:00:00');
+  const endD = new Date(e+'T00:00:00');
+  const weeks = new Map();
+  let cur = new Date(startD);
+  while(cur <= endD){
+    const iso = getISOWeek(toISODate(cur));
+    const key = iso.year+'-W'+pad2(iso.week);
+    if(!weeks.has(key)) weeks.set(key, iso.monday);
+    cur.setDate(cur.getDate()+1);
+  }
+  return [...weeks.entries()];
+}
+
 /* ======================= RENDER GROUPS ======================= */
 const container = document.getElementById('groupContainer');
 let totalTasks = 0;
@@ -472,6 +542,8 @@ GROUPS.forEach(g=>{
 
   tasks.forEach(t=>{
     const tr = document.createElement('tr');
+    const weeksForTask = taskWeeks(t).map(([k])=>k);
+    tr.dataset.weeks = weeksForTask.join(',');
     tr.innerHTML = `
       <td class="tid">#${t.id}</td>
       <td class="tname">${t.name}</td>
@@ -610,6 +682,93 @@ function scrollToGroup(key){
     header.nextElementSibling.classList.add('open');
   }
   header.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ======================= WEEK FILTER BAR ======================= */
+const weekMap = new Map(); // key -> {monday, count}
+TASKS.forEach(t=>{
+  taskWeeks(t).forEach(([key, monday])=>{
+    if(!weekMap.has(key)) weekMap.set(key, {monday, count:0});
+    weekMap.get(key).count++;
+  });
+});
+const sortedWeeks = [...weekMap.entries()].sort((a,b)=> a[1].monday - b[1].monday);
+
+const weekButtonsEl = document.getElementById('weekButtons');
+let currentWeekFilter = null;
+
+const resetBtn = document.createElement('button');
+resetBtn.className = 'week-btn reset active';
+resetBtn.textContent = 'Todas as semanas';
+resetBtn.addEventListener('click', ()=> applyWeekFilter(null));
+weekButtonsEl.appendChild(resetBtn);
+
+sortedWeeks.forEach(([key, info])=>{
+  const monday = info.monday;
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const rangeLabel = monday.getDate()+" "+months[monday.getMonth()]+"–"+sunday.getDate()+" "+months[sunday.getMonth()];
+  const weekNumLabel = key.split('-W')[1];
+  const yearLabel = key.split('-W')[0];
+  const btn = document.createElement('button');
+  btn.className = 'week-btn';
+  btn.dataset.week = key;
+  btn.innerHTML = `<span class="wn">Sem ${weekNumLabel}${yearLabel!=='2026' ? " '"+yearLabel.slice(2) : ''}</span><span class="wd">${rangeLabel}</span><span class="wc">${info.count}</span>`;
+  btn.addEventListener('click', ()=> applyWeekFilter(currentWeekFilter===key ? null : key));
+  weekButtonsEl.appendChild(btn);
+});
+
+function applyWeekFilter(weekKey){
+  currentWeekFilter = weekKey;
+  document.querySelectorAll('.week-btn').forEach(b=>{
+    const isReset = b.classList.contains('reset');
+    b.classList.toggle('active', isReset ? weekKey===null : b.dataset.week===weekKey);
+  });
+
+  document.querySelectorAll('.group-card').forEach(card=>{
+    const rows = [...card.querySelectorAll('tbody tr')];
+    let visibleCount = 0;
+    rows.forEach(tr=>{
+      if(!weekKey){ tr.style.display=''; visibleCount++; return; }
+      const weeks = (tr.dataset.weeks||'').split(',').filter(Boolean);
+      const match = weeks.includes(weekKey);
+      tr.style.display = match ? '' : 'none';
+      if(match) visibleCount++;
+    });
+    if(weekKey){
+      card.style.display = visibleCount ? '' : 'none';
+      if(visibleCount){
+        card.querySelector('.group-header').classList.add('open');
+        card.querySelector('.group-body').classList.add('open');
+      }
+    }else{
+      card.style.display='';
+    }
+  });
+
+  updateGanttWeekBand(weekKey);
+}
+
+let weekBandEl = null;
+function updateGanttWeekBand(weekKey){
+  if(weekBandEl){ weekBandEl.remove(); weekBandEl = null; }
+  if(!weekKey) return;
+  const info = weekMap.get(weekKey);
+  if(!info) return;
+  const left = 230 + dayOffset(toISODate(info.monday))*PX_PER_DAY;
+  const width = 7*PX_PER_DAY;
+  weekBandEl = document.createElement('div');
+  weekBandEl.style.position='absolute';
+  weekBandEl.style.top='0';
+  weekBandEl.style.bottom='0';
+  weekBandEl.style.left=left+'px';
+  weekBandEl.style.width=width+'px';
+  weekBandEl.style.background='rgba(62,124,177,0.14)';
+  weekBandEl.style.borderLeft='1px solid var(--accent)';
+  weekBandEl.style.borderRight='1px solid var(--accent)';
+  weekBandEl.style.pointerEvents='none';
+  weekBandEl.style.zIndex='0';
+  rowsWrap.appendChild(weekBandEl);
 }
 
 /* ======================= COMMENTS (persisted via window.storage) ======================= */
