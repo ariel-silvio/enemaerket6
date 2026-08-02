@@ -1,0 +1,39 @@
+name: Sync Notion → data.json
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Daily at 05:30 UTC (~07:30 CET / 06:30 CEST). Adjust as you like.
+    - cron: "30 5 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Export Notion → data.json
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: python3 scripts/export_notion.py
+
+      - name: Commit and push if data.json changed
+        run: |
+          git config user.name "notion-sync-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if git diff --quiet -- data.json; then
+            echo "No changes to data.json"
+          else
+            git add data.json
+            git commit -m "Sync data.json from Notion [automated]"
+            git push
+          fi
