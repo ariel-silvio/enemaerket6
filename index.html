@@ -37,6 +37,13 @@
   .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;}
   .sync-dot.stale{background:#C9A227;}
   .sync-dot.error{background:var(--danger);}
+  .sync-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#E8EDF2;
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);border-radius:20px;
+    padding:4px 12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+    transition:background .15s;
+  }
+  .sync-btn:hover{background:rgba(255,255,255,0.16);}
 
   .wrap{max-width:1360px;margin:0 auto;padding:26px 24px 80px;}
 
@@ -159,7 +166,10 @@
     <b>Ariel</b> (Vestas, Skejby, sem carro) · <b>Natalia</b> (pedagogia, formatura jan/2027) · <b>Olivia</b> (Elise Smith Skole)<br>
     Mudança: <b>1 de setembro de 2026, 12:00</b>
   </div>
-  <div class="sync-note" id="syncNote"><span class="sync-dot" id="syncDot"></span><span id="syncText">Carregando dados do Notion…</span></div>
+  <div class="sync-note" id="syncNote">
+    <span class="sync-dot" id="syncDot"></span><span id="syncText">Carregando dados do Notion…</span>
+    <a class="sync-btn" href="https://github.com/ariel-silvio/enemaerket6/actions/workflows/sync-notion.yml" target="_blank" rel="noopener" title="Abre a aba Actions no GitHub — clique em &quot;Run workflow&quot; lá para puxar os dados mais recentes do Notion">↻ Sincronizar agora</a>
+  </div>
 </div>
 
 <div class="wrap">
