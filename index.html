@@ -8,23 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#EEF1EC;
-    --paper-card:#FBFBF9;
-    --ink:#1B2028;
-    --ink-soft:#5A6270;
-    --line:#D8DCD3;
-    --navy:#152230;
-    --navy-2:#1E3346;
-    --blueprint-line:rgba(140,180,210,0.18);
-    --accent:#3E7CB1;
-    --danger:#C1440E;
-    --ok:#4A7C59;
-    --warn:#B5563C;
-
-    --A:#1B4B5A; --B:#2C6E7F; --C:#C1440E; --D:#4A7C59; --E1:#6B5B95; --E2:#9B7EBD;
-    --F:#3E7CB1; --G:#7A8B99; --H:#8C6D5C;
-    --P2:#2E5C8A; --P3:#5C5C5C; --P4:#B5563C; --P5:#A67C52; --P6:#D68C45;
-    --P7:#5B8C3E; --P7b:#7FA65C; --P8:#8FB339; --P9:#4056A1; --P10:#8B3A3A; --P11:#C9762C;
+    --paper:#EEF1EC; --paper-card:#FBFBF9; --ink:#1B2028; --ink-soft:#5A6270; --line:#D8DCD3;
+    --navy:#152230; --navy-2:#1E3346; --blueprint-line:rgba(140,180,210,0.18);
+    --accent:#3E7CB1; --danger:#C1440E; --ok:#4A7C59; --warn:#B5563C;
+    --fallback:#7A8B99;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;}
@@ -32,54 +19,47 @@
   h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
   a{color:inherit;}
 
-  /* ---------- HERO ---------- */
   .hero{
     background:
       linear-gradient(var(--blueprint-line) 1px, transparent 1px) 0 0/32px 32px,
       linear-gradient(90deg, var(--blueprint-line) 1px, transparent 1px) 0 0/32px 32px,
       linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-    color:#E8EDF2;
-    padding:38px 28px 30px;
-    position:relative;
-    overflow:hidden;
+    color:#E8EDF2; padding:38px 28px 30px; position:relative; overflow:hidden;
   }
-  .hero-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}
   .hero h1{font-size:26px;letter-spacing:0.2px;font-weight:600;}
   .hero .addr{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#9FB4C7;margin-top:6px;letter-spacing:0.3px;}
   .hero .family{margin-top:14px;font-size:13px;color:#C7D4DE;line-height:1.6;}
   .hero .family b{color:#E8EDF2;font-weight:600;}
-  .milestones{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
-  .ms-chip{
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.14);
-    border-radius:3px;padding:8px 12px;min-width:150px;
+  .sync-note{
+    margin-top:16px;font-size:11.5px;color:#8FA6BA;font-family:'IBM Plex Mono',monospace;
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   }
-  .ms-chip .d{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#EAD9C7;font-weight:600;}
-  .ms-chip .l{font-size:11px;color:#9FB4C7;margin-top:2px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;}
+  .sync-dot.stale{background:#C9A227;}
+  .sync-dot.error{background:var(--danger);}
 
-  /* ---------- MAIN CONTAINER ---------- */
   .wrap{max-width:1360px;margin:0 auto;padding:26px 24px 80px;}
 
-  /* ---------- ADJUST PANEL ---------- */
+  .state-box{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:4px;
+    padding:40px 24px;text-align:center;color:var(--ink-soft);font-size:13.5px;line-height:1.6;
+  }
+  .state-box.error{border-left:4px solid var(--danger);color:var(--ink);text-align:left;}
+  .state-box code{background:#EFEFEA;padding:1px 6px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+
   .panel{
-    background:var(--paper-card);
-    border:1px solid var(--line);
-    border-left:4px solid var(--accent);
-    border-radius:4px;
-    padding:20px 22px;
-    margin-bottom:22px;
+    background:var(--paper-card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:4px;padding:20px 22px;margin-bottom:22px;
   }
   .panel h2{font-size:16px;margin-bottom:6px;}
   .panel p{font-size:13px;color:var(--ink-soft);line-height:1.55;margin:6px 0 14px;}
   .panel .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
   button{
-    font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;
-    border:none;border-radius:3px;padding:9px 16px;cursor:pointer;
-    background:var(--navy);color:#fff;transition:opacity .15s;
+    font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;border:none;border-radius:3px;
+    padding:9px 16px;cursor:pointer;background:var(--navy);color:#fff;transition:opacity .15s;
   }
   button:hover{opacity:0.88;}
   button.secondary{background:transparent;color:var(--navy);border:1px solid var(--line);}
-  button:disabled{opacity:0.4;cursor:not-allowed;}
   .pending-count{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
   #outputBox{display:none;margin-top:14px;}
   #outputBox textarea{
@@ -88,96 +68,57 @@
   }
   .copied-msg{font-size:12px;color:var(--ok);font-weight:600;margin-left:6px;display:none;}
 
-  /* ---------- STATS ---------- */
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:26px;}
-  .stat-card{background:var(--paper-card);border:1px solid var(--line);border-radius:4px;padding:16px 18px;}
-  .stat-card .label{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink-soft);font-weight:600;}
-  .stat-card .value{font-family:'IBM Plex Mono',monospace;font-size:20px;margin-top:6px;font-weight:600;}
-  .stat-card.must{border-left:4px solid var(--danger);}
-  .stat-card.want{border-left:4px solid var(--ok);}
-  .stat-card .sub{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
-
-  /* ---------- WEEK FILTER ---------- */
   .week-section{margin-bottom:24px;}
   .week-section h2{font-size:16px;margin-bottom:4px;}
   .week-section .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
   .week-buttons{display:flex;flex-wrap:wrap;gap:8px;}
   .week-btn{
-    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;
-    background:var(--paper-card);color:var(--ink);border:1px solid var(--line);
-    border-radius:20px;padding:7px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;background:var(--paper-card);
+    color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
   }
   .week-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .week-btn .wn{font-weight:600;}
   .week-btn .wd{color:var(--ink-soft);font-size:10.5px;}
-  .week-btn .wc{
-    background:var(--line);color:var(--ink-soft);font-size:9.5px;border-radius:8px;padding:1px 6px;
-  }
+  .week-btn .wc{background:var(--line);color:var(--ink-soft);font-size:9.5px;border-radius:8px;padding:1px 6px;}
   .week-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;}
   .week-btn.active .wd{color:#B9C6D3;}
   .week-btn.active .wc{background:rgba(255,255,255,0.2);color:#fff;}
   .week-btn.reset{border-style:dashed;}
 
-  /* ---------- GANTT ---------- */
   .gantt-section{margin-bottom:30px;}
   .gantt-section h2{font-size:16px;margin-bottom:4px;}
   .gantt-section .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
-  .gantt-outer{
-    border:1px solid var(--line);border-radius:4px;overflow-x:auto;background:var(--paper-card);
-  }
+  .gantt-outer{border:1px solid var(--line);border-radius:4px;overflow-x:auto;background:var(--paper-card);}
   .gantt-grid{position:relative;min-width:1500px;}
-  .gantt-months{
-    display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-card);z-index:2;
-  }
-  .gantt-month{
-    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);
-    padding:6px 0 6px 6px;border-left:1px solid var(--line);flex-shrink:0;
-  }
+  .gantt-months{display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-card);z-index:2;}
+  .gantt-month{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);padding:6px 0 6px 6px;border-left:1px solid var(--line);flex-shrink:0;}
   .gantt-rows{position:relative;padding:6px 0;}
   .gantt-today{position:absolute;top:0;bottom:0;width:1px;background:var(--danger);z-index:1;}
-  .gantt-today::after{
-    content:"hoje";position:absolute;top:-2px;left:4px;font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--danger);
-  }
+  .gantt-today::after{content:"hoje";position:absolute;top:-2px;left:4px;font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--danger);}
   .gantt-row{display:flex;align-items:center;height:30px;position:relative;}
   .gantt-row:hover{background:rgba(0,0,0,0.02);}
   .gantt-label{
-    position:sticky;left:0;width:230px;flex-shrink:0;background:var(--paper-card);
-    font-size:11.5px;padding-left:10px;padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    position:sticky;left:0;width:230px;flex-shrink:0;background:var(--paper-card);font-size:11.5px;
+    padding-left:10px;padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     cursor:pointer;border-right:1px solid var(--line);height:100%;display:flex;align-items:center;z-index:1;
   }
   .gantt-label:hover{color:var(--accent);}
   .gantt-track{position:relative;flex:1;height:100%;}
-  .gantt-bar{
-    position:absolute;top:7px;height:16px;border-radius:2px;cursor:pointer;
-    box-shadow:0 1px 2px rgba(0,0,0,0.15);
-  }
+  .gantt-bar{position:absolute;top:7px;height:16px;border-radius:2px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);}
   .gantt-bar:hover{filter:brightness(1.1);}
 
-  /* ---------- BREAKDOWN ---------- */
   .breakdown h2.section-title{font-size:18px;margin-bottom:14px;}
-  .group-card{
-    background:var(--paper-card);border:1px solid var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden;
-  }
-  .group-header{
-    display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;
-    border-left:6px solid var(--gcolor,#999);
-  }
+  .group-card{background:var(--paper-card);border:1px solid var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden;}
+  .group-header{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;user-select:none;border-left:6px solid var(--gcolor,#999);}
   .group-header:hover{background:rgba(0,0,0,0.02);}
   .group-header .chev{font-size:11px;transition:transform .15s;color:var(--ink-soft);width:12px;}
   .group-header.open .chev{transform:rotate(90deg);}
   .group-header .gtitle{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;flex:1;}
-  .group-header .gproject{font-size:11px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
-  .group-header .gcount{
-    font-size:11px;font-family:'IBM Plex Mono',monospace;color:#fff;background:var(--gcolor,#999);
-    padding:2px 8px;border-radius:10px;
-  }
+  .group-header .gcount{font-size:11px;font-family:'IBM Plex Mono',monospace;color:#fff;background:var(--gcolor,#999);padding:2px 8px;border-radius:10px;}
   .group-body{display:none;padding:0 4px 10px;}
   .group-body.open{display:block;}
   table{width:100%;border-collapse:collapse;font-size:12px;}
-  thead th{
-    text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-soft);
-    padding:8px 8px;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap;
-  }
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-soft);padding:8px 8px;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap;}
   tbody td{padding:8px 8px;border-bottom:1px solid #EEEEE8;vertical-align:top;}
   tbody tr:last-child td{border-bottom:none;}
   tbody tr:hover{background:rgba(0,0,0,0.015);}
@@ -187,22 +128,18 @@
   .badge.DIY{background:#E4EEE6;color:var(--ok);}
   .badge.Professional{background:#F5E4DD;color:var(--warn);}
   .badge.Admin{background:#E4E9F0;color:#3B5A80;}
+  .badge.Purchase{background:#FBEFD6;color:#A2791E;}
   .prio{font-size:10px;padding:2px 6px;border-radius:2px;font-weight:600;white-space:nowrap;}
-  .prio.Crítica{background:#F8DAD0;color:var(--danger);}
-  .prio.Alta{background:#FBE8D6;color:#A25E1E;}
+  .prio.Critical{background:#F8DAD0;color:var(--danger);}
+  .prio.High{background:#FBE8D6;color:#A25E1E;}
   .prio.Normal{background:#EDEDEA;color:var(--ink-soft);}
-  .prio.Baixa{background:#EDEDEA;color:#9AA0A6;}
+  .prio.Low{background:#EDEDEA;color:#9AA0A6;}
   .status-tag{font-size:10px;color:var(--ink-soft);}
   .status-tag.done{color:var(--ok);font-weight:600;}
   .status-tag.blocked{color:var(--danger);font-weight:600;}
-  .guess{opacity:0.85;}
-  .guess::after{content:" *";color:var(--accent);}
-  .est::after{content:" ~";color:var(--accent);}
+  .unset{color:#B7BDB2;font-style:italic;}
   .note-cell{max-width:220px;color:var(--ink-soft);font-size:11.5px;line-height:1.4;}
-  .comment-cell input{
-    width:100%;min-width:170px;font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;
-    border:1px solid var(--line);border-radius:3px;padding:6px 8px;background:#fff;
-  }
+  .comment-cell input{width:100%;min-width:170px;font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;border:1px solid var(--line);border-radius:3px;padding:6px 8px;background:#fff;}
   .comment-cell input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent);}
   .comment-cell input.has-comment{border-color:var(--accent);background:#F1F6FA;}
 
@@ -210,269 +147,141 @@
   .legend b{color:var(--ink);}
   footer{margin-top:40px;font-size:11.5px;color:var(--ink-soft);text-align:center;padding-bottom:10px;}
 
-  @media (max-width:700px){
-    .hero{padding:26px 16px;}
-    .gantt-label{width:150px;font-size:10.5px;}
-  }
+  @media (max-width:700px){ .hero{padding:26px 16px;} .gantt-label{width:150px;font-size:10.5px;} }
 </style>
 </head>
 <body>
 
 <div class="hero">
-  <div class="hero-top">
-    <div>
-      <h1>Enemærket 6, 8240 Risskov</h1>
-      <div class="addr">VILA 1968 · 110 M² ÚTIL · 100 M² PORÃO · 875 M² TERRENO + GARAGEM</div>
-    </div>
-  </div>
+  <h1>Enemærket 6, 8240 Risskov</h1>
+  <div class="addr">VILA 1968 · 110 M² ÚTIL · 100 M² PORÃO · 875 M² TERRENO + GARAGEM</div>
   <div class="family">
     <b>Ariel</b> (Vestas, Skejby, sem carro) · <b>Natalia</b> (pedagogia, formatura jan/2027) · <b>Olivia</b> (Elise Smith Skole)<br>
     Mudança: <b>1 de setembro de 2026, 12:00</b>
   </div>
-  <div class="milestones" id="milestoneStrip"></div>
+  <div class="sync-note" id="syncNote"><span class="sync-dot" id="syncDot"></span><span id="syncText">Carregando dados do Notion…</span></div>
 </div>
 
 <div class="wrap">
+  <div id="loadingState" class="state-box">Carregando data.json e groups.json…</div>
+  <div id="errorState" class="state-box error" style="display:none;"></div>
+  <div id="appRoot" style="display:none;">
 
-  <!-- ADJUST PANEL -->
-  <div class="panel">
-    <h2>Ajustar o plano</h2>
-    <p>
-      Escrevam um comentário na coluna <b>"Seu comentário"</b> de qualquer linha — ex.: "mudar data para 20 set",
-      "mover para Grupo D", "custo errado, é 5.000". Quando terminarem, cliquem em <b>"Gerar lista de mudanças"</b>
-      para montar um texto com todos os comentários, prontos para colar de volta pra mim. Os comentários ficam salvos
-      neste navegador entre sessões — não precisam terminar tudo de uma vez.
-    </p>
-    <div class="actions">
-      <button onclick="generateChanges()">Gerar lista de mudanças</button>
-      <button class="secondary" onclick="clearAllComments()">Limpar todos os comentários</button>
-      <span class="pending-count" id="pendingCount">0 comentários pendentes</span>
+    <div class="panel">
+      <h2>Ajustar o plano</h2>
+      <p>
+        O Notion é a fonte oficial dos dados — datas, status, custo e responsável vêm de lá e são atualizados
+        automaticamente. Este comentário serve para pedidos rápidos (ex.: "mudar data para 20 set") que eu depois
+        aplico diretamente no Notion, não neste arquivo. Comentários ficam salvos só neste navegador.
+      </p>
+      <div class="actions">
+        <button onclick="generateChanges()">Gerar lista de mudanças</button>
+        <button class="secondary" onclick="clearAllComments()">Limpar todos os comentários</button>
+        <span class="pending-count" id="pendingCount">0 comentários pendentes</span>
+      </div>
+      <div id="outputBox">
+        <textarea id="outputText" readonly></textarea>
+        <div class="actions" style="margin-top:8px;">
+          <button class="secondary" onclick="copyOutput()">Copiar texto</button>
+          <span class="copied-msg" id="copiedMsg">Copiado!</span>
+        </div>
+      </div>
     </div>
-    <div id="outputBox">
-      <textarea id="outputText" readonly></textarea>
-      <div class="actions" style="margin-top:8px;">
-        <button class="secondary" onclick="copyOutput()">Copiar texto</button>
-        <span class="copied-msg" id="copiedMsg">Copiado!</span>
+
+    <div class="week-section">
+      <h2>Filtrar por semana (ISO)</h2>
+      <div class="hint">Clique numa semana para ver só as tarefas marcadas para ela. Tarefas só com trimestre (sem dia exato) não aparecem em nenhum filtro de semana.</div>
+      <div class="week-buttons" id="weekButtons"></div>
+    </div>
+
+    <div class="gantt-section">
+      <h2>Visão geral — Gantt por grupo</h2>
+      <div class="hint">Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro.</div>
+      <div class="gantt-outer"><div class="gantt-grid" id="ganttGrid"></div></div>
+    </div>
+
+    <div class="breakdown">
+      <h2 class="section-title">Estrutura detalhada (WBS)</h2>
+      <div id="groupContainer"></div>
+      <div class="legend">
+        <b>Responsável</b> e <b>Custo/Prazo/Status</b> vêm direto do Notion. Onde aparecer <span class="unset">— a definir</span>, o campo ainda está vazio lá, não é um palpite meu.
       </div>
     </div>
   </div>
 
-  <!-- STATS -->
-  <div class="stats">
-    <div class="stat-card must">
-      <div class="label">Essencial (segurança / legal / protetivo)</div>
-      <div class="value">0 DKK documentado</div>
-      <div class="sub">~31 tarefas ainda sem custo no Notion — tratem como piso, não previsão</div>
-    </div>
-    <div class="stat-card want">
-      <div class="label">Desejável (estético / melhoria)</div>
-      <div class="value">6.830–7.470 DKK</div>
-      <div class="sub">8 tarefas com custo · ~35 tarefas sem custo</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Tarefas rastreadas</div>
-      <div class="value" id="taskCountStat">—</div>
-      <div class="sub">across 11 projetos / 20 grupos</div>
-    </div>
-  </div>
-
-  <!-- WEEK FILTER -->
-  <div class="week-section">
-    <h2>Filtrar por semana (ISO)</h2>
-    <div class="hint">
-      Clique numa semana para ver só as tarefas com data marcada para ela — nas tabelas abaixo e como faixa destacada no Gantt.
-      Clique de novo para tirar o filtro. Tarefas de 2027+ que só têm trimestre (sem dia exato) não aparecem em nenhum filtro de semana.
-    </div>
-    <div class="week-buttons" id="weekButtons"></div>
-  </div>
-
-  <!-- GANTT -->
-  <div class="gantt-section">
-    <h2>Visão geral — Gantt por grupo</h2>
-    <div class="hint">
-      Cada barra é a janela (início do 1º item → prazo do último) de um grupo, não de uma tarefa individual — veja o detalhe abaixo.
-      Grupos de 2027+ sem data exata aparecem como faixa do trimestre inteiro. Clique numa barra ou label para abrir o grupo.
-    </div>
-    <div class="gantt-outer">
-      <div class="gantt-grid" id="ganttGrid"></div>
-    </div>
-  </div>
-
-  <!-- BREAKDOWN -->
-  <div class="breakdown">
-    <h2 class="section-title">Estrutura detalhada (WBS)</h2>
-    <div id="groupContainer"></div>
-    <div class="legend">
-      <b>*</b> ao lado de um nome em "Responsável" = palpite meu com base no tipo de tarefa e conteúdo, não veio da sua base de dados — confirmem ou corrijam.<br>
-      <b>~</b> ao lado de horas = estimativa minha (poucas tarefas tinham horas no arquivo original). Onde não há "~", a hora veio da sua base.<br>
-      Datas de 2027+ sem dia exato aparecem como trimestre (ex. "1º tri 2027").
-    </div>
-  </div>
-
-  <footer>Gerado a partir de Enemærket6_Plano_Reforma.md · 2 de agosto de 2026</footer>
+  <footer>Dados sincronizados do Notion via GitHub Action · <span id="footerTaskCount"></span></footer>
 </div>
 
 <script>
-/* ======================= DATA ======================= */
-const GROUPS = [
-  {key:'A',  project:'Move-In 2026', label:'Grupo A — Dia 1 (1 set, overtagelse)', color:'var(--A)'},
-  {key:'B',  project:'Move-In 2026', label:'Grupo B — Semana 1: limpeza e remoção', color:'var(--B)'},
-  {key:'C',  project:'Move-In 2026', label:'Grupo C — Elétrica + dedetização', color:'var(--C)'},
-  {key:'D',  project:'Move-In 2026', label:'Grupo D — Teto e paredes (sala + 3º quarto)', color:'var(--D)'},
-  {key:'E1', project:'Move-In 2026', label:'Grupo E — Quarto principal (piso/rodapé)', color:'var(--E1)'},
-  {key:'E2', project:'Move-In 2026', label:'Grupo E — Quarto da Olivia (piso/rodapé)', color:'var(--E2)'},
-  {key:'F',  project:'Move-In 2026', label:'Grupo F — Banheiro', color:'var(--F)'},
-  {key:'G',  project:'Move-In 2026', label:'Grupo G — Entrada / escada', color:'var(--G)'},
-  {key:'H',  project:'Move-In 2026', label:'Grupo H — Saída do aluguel', color:'var(--H)'},
-  {key:'P2', project:'Porão', label:'Porão — Umidade e Acabamento', color:'var(--P2)'},
-  {key:'P3', project:'Garagem', label:'Reforma da Garagem', color:'var(--P3)'},
-  {key:'P4', project:'Chaminé', label:'Chaminé e Conformidade da Brændeovn', color:'var(--P4)'},
-  {key:'P5', project:'Acabamento', label:'Acabamento do Térreo', color:'var(--P5)'},
-  {key:'P6', project:'Cozinha', label:'Cozinha', color:'var(--P6)'},
-  {key:'P7', project:'Jardim', label:'Jardim 2026 — Antes do Inverno', color:'var(--P7)'},
-  {key:'P7b',project:'Jardim', label:'Jardim 2027 — Depois do Inverno', color:'var(--P7b)'},
-  {key:'P8', project:'Estufa', label:'Estufa: cultivo + cantinho do café', color:'var(--P8)'},
-  {key:'P9', project:'Casa Inteligente', label:'Casa Inteligente', color:'var(--P9)'},
-  {key:'P10',project:'Segurança', label:'Segurança', color:'var(--P10)'},
-  {key:'P11',project:'Aquecimento', label:'Aquecimento e Energia', color:'var(--P11)'},
-];
+/* ======================= LOAD DATA ======================= */
+let GROUPS_CONFIG = [];
+let TASKS = [];
 
-// start/end: 'YYYY-MM-DD' or null. quarter: label string if date is quarter-level.
-const TASKS = [
-// --- Grupo A ---
-{id:11,name:"Leitura dos medidores no dia da entrega",type:"DIY",status:"Não iniciada",priority:"Crítica",resp:"Ariel",start:"2026-09-01",end:"2026-09-01",cost:"—",hours:1,hoursEst:true,note:"Fotografar medidores de luz/água/calor, com data, ao meio-dia",group:"A"},
-{id:10,name:"Levantamento fotográfico inicial",type:"DIY",status:"Não iniciada",priority:"Crítica",resp:"Ariel",start:"2026-09-01",end:"2026-09-01",cost:"—",hours:1,hoursEst:true,note:"Antes de mexer em qualquer coisa — evidência para seguro",group:"A"},
-{id:73,name:"Bomba d'água — localizar, verificar funcionamento, aprender a operar",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-09-01",end:"2026-09-01",cost:"—",hours:1,hoursEst:true,note:"Só observar — sem chamada a profissional no dia 1. Inspeção completa vai para #82",group:"A"},
-// --- Grupo B ---
-{id:14,name:"Reunir documentação do vendedor",type:"Admin",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-09-01",end:"2026-09-06",cost:"—",hours:2,hoursEst:true,note:"Manual/data da brændeovn, solceller, licenças",group:"B"},
-{id:16,name:"Separar itens deixados pelo vendedor",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Natalia",start:"2026-09-01",end:"2026-09-06",cost:"—",hours:3,hoursEst:true,note:"Ficar / doar / genbrugsstation / resíduo perigoso",group:"B"},
-{id:19,name:"Remover e doar móveis indesejados",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Natalia",start:"2026-09-01",end:"2026-09-06",cost:"—",hours:4,hoursEst:true,note:"Anunciar no DBA/FB Marketplace com antecedência",group:"B"},
-{id:12,name:"Inventário de chaves — checar sistema existente + acionar lasesmed",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Låsesmed",start:"2026-09-01",end:"2026-09-06",cost:"—",hours:2,hoursEst:true,note:"Escopo ampliado: porta + postkasse + porão, \"ens nøgle\"",group:"B"},
-{id:13,name:"Transferir contas (fjernvarme, luz, água, internet)",type:"Admin",status:"Concluída",priority:"Crítica",resp:"Ariel",start:"2026-09-01",end:"2026-09-05",cost:"—",hours:1,hoursEst:true,note:"Luz/internet/VE-anlæg por Ariel; água/fjernvarme pela vendedora",group:"B"},
-{id:17,name:"Desmontar guarda-roupas embutidos + inspecionar paredes",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-02",end:"2026-09-04",cost:"—",hours:3,hoursEst:true,note:"Fotografar antes de remover",group:"B"},
-{id:18,name:"Remover carpetes + inspecionar subpiso",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel + Natalia",start:"2026-09-02",end:"2026-09-03",cost:"—",hours:2,hoursEst:true,note:"Momento de decidir rodapé — já decidido: troca",group:"B"},
-{id:82,name:"Bomba d'água — inspeção completa, limpeza, reset e manutenção",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-09-03",end:"2026-09-05",cost:"0–3.500",hours:3,hoursEst:true,note:"Continuação da #73. Se não resolver, VVS-mester como plano B",group:"B"},
-{id:83,name:"Solceller — cadastro no Vindstød para pristillæg",type:"Admin",status:"Em andamento",priority:"Normal",resp:"Ariel",start:"2026-08-02",end:null,cost:"—",hours:1,hoursEst:true,note:"Separado da transferência de propriedade do VE-anlæg (já feita)",group:"B"},
-// --- Grupo C ---
-{id:55,name:"Ligações prévias com 5–6 eletricistas",type:"Admin",status:"Não iniciada",priority:"Crítica",resp:"Ariel",start:"2026-08-03",end:"2026-08-04",cost:"—",hours:3,hoursEst:true,note:"Envie o elinstallationsrapport antes",group:"C"},
-{id:64,name:"Mapear necessidade de tomadas no térreo",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-08-03",end:"2026-08-03",cost:"—",hours:2,hoursEst:true,note:"⚠️ Exige acesso pré-entrega — não confirmado",group:"C"},
-{id:85,name:"Verificar tomadas externas existentes no jardim",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-08-03",end:"2026-08-03",cost:"—",hours:1,hoursEst:true,note:"⚠️ Mesma dependência de acesso. Se precisar, entra no orçamento da #56",group:"C"},
-{id:56,name:"Visitas + orçamentos firmes (3 empresas)",type:"Admin",status:"Não iniciada",priority:"Crítica",resp:"Ariel",start:"2026-08-04",end:"2026-08-06",cost:"—",hours:4,hoursEst:true,note:"⚠️ Exige acesso pré-entrega — não confirmado",group:"C"},
-{id:57,name:"Escolher e contratar empresa",type:"Admin",status:"Não iniciada",priority:"Crítica",resp:"Ariel",start:"2026-08-07",end:"2026-08-07",cost:"—",hours:1,hoursEst:true,note:"Comprimido a pedido da Natalia",group:"C"},
-{id:59,name:"Ponto de decisão de contingência",type:"Admin",status:"Não iniciada",priority:"Crítica",resp:"Ariel + Natalia",start:"2026-08-07",end:"2026-08-07",cost:"—",hours:1,hoursEst:true,note:"Se não fechar até aqui, priorizar só risco de incêndio",group:"C"},
-{id:58,name:"Remediação elétrica — 24 defeitos incl. risco de incêndio",type:"Professional",status:"Não iniciada",priority:"Crítica",resp:"Elektriker",start:"2026-09-11",end:"2026-09-16",cost:"—",hours:40,hoursEst:true,note:"⚠️ Prazo final é estimativa minha, a confirmar",group:"C"},
-{id:65,name:"Adicionar/realocar tomadas, térreo",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Elektriker",start:"2026-09-11",end:"2026-09-16",cost:"—",hours:8,hoursEst:true,note:"Priorizar cômodos que serão pintados",group:"C"},
-{id:21,name:"Controle de pragas preventivo — casa toda",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Skadedyrsfirma",start:"2026-09-08",end:"2026-09-10",cost:"—",hours:2,hoursEst:true,note:"Antes de teto/paredes/piso",group:"C"},
-// --- Grupo D ---
-{id:24,name:"Limpar e tratar/pintar o teto de madeira — casa toda",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-17",end:"2026-09-19",cost:"—",hours:6,hoursEst:true,note:"Depois da elétrica e dedetização (Grupo C)",group:"D"},
-{id:26,name:"Consertar e pintar paredes — sala + 3º quarto",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Natalia",start:"2026-09-20",end:"2026-09-22",cost:"—",hours:5,hoursEst:true,note:"Passagem única — comprimido 02/ago",group:"D"},
-// --- Grupo E1: Quarto principal ---
-{id:74,name:"Escaneamento de umidade + avaliação da base do piso",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel + Natalia",start:"2026-09-02",end:"2026-09-06",cost:"—",hours:2,hoursEst:true,note:"Independente da elétrica",group:"E1"},
-{id:76,name:"Remover rodapé antigo + preparo de parede + 1ª demão",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel + Natalia",start:"2026-09-17",end:"2026-09-18",cost:"—",hours:6,hoursEst:true,note:"Depende de #58 (elétrica) e #24 (teto)",group:"E1"},
-{id:78,name:"Instalar piso clicado",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel + Natalia",start:"2026-09-20",end:"2026-09-21",cost:"—",hours:8,hoursEst:true,note:"Vão de dilatação 10–15mm",group:"E1"},
-{id:80,name:"Instalar rodapé novo + demão final",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel + Natalia",start:"2026-09-22",end:"2026-09-23",cost:"40–80 DKK/m",hours:4,hoursEst:true,note:"Fixar na parede, nunca no piso",group:"E1"},
-// --- Grupo E2: Quarto da Olivia ---
-{id:75,name:"Escaneamento de umidade + avaliação da base do piso",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Natalia",start:"2026-09-02",end:"2026-09-06",cost:"—",hours:2,hoursEst:true,note:"Independente da elétrica",group:"E2"},
-{id:77,name:"Remover rodapé antigo + preparo de parede + 1ª demão",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Natalia",start:"2026-09-19",end:"2026-09-20",cost:"—",hours:6,hoursEst:true,note:"Sequencial após #76",group:"E2"},
-{id:79,name:"Instalar piso clicado",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Natalia",start:"2026-09-21",end:"2026-09-22",cost:"—",hours:8,hoursEst:true,note:"Mesmas regras de #78",group:"E2"},
-{id:81,name:"Instalar rodapé novo + demão final",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Natalia",start:"2026-09-23",end:"2026-09-24",cost:"40–80 DKK/m",hours:4,hoursEst:true,note:"Não coincide mais com a viagem de Ariel",group:"E2"},
-// --- Grupo F ---
-{id:60,name:"Remover armário cinza",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-07",end:"2026-09-08",cost:"—",hours:1,hoursEst:true,note:"Checar registros/tubulação atrás antes de remover",group:"F"},
-{id:22,name:"Refazer rejunte ao redor da banheira (item vermelho)",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-09-08",end:"2026-09-09",cost:"—",hours:3,hoursEst:true,note:"Risco ativo de dano por água — antes do chuveiro",group:"F"},
-{id:63,name:"Pintar armário sob a pia",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Ariel",start:"2026-09-09",end:"2026-09-10",cost:"—",hours:2,hoursEst:true,note:"Primer de aderência — laminado, não madeira crua",group:"F"},
-{id:23,name:"Instalar chuveiro sobre a banheira",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"VVS-installatør",start:"2026-09-11",end:"2026-09-11",cost:"3.500",hours:3,hoursEst:true,note:"Meio período. Avaliar azulejo rachado no nicho na mesma visita",group:"F"},
-{id:62,name:"Trocar iluminação sobre o espelho",type:"Professional",status:"Não iniciada",priority:"Normal",resp:"Elektriker",start:"2026-09-11",end:"2026-09-16",cost:"—",hours:2,hoursEst:true,note:"Våderum — mesmo orçamento/visita do Grupo C",group:"F"},
-// --- Grupo G ---
-{id:25,name:"Lixar e pintar os degraus — entrada do porão",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-30",end:"2026-10-01",cost:"—",hours:3,hoursEst:true,note:"Grão 80 depois 120",group:"G"},
-// --- Grupo H ---
-{id:54,name:"Confirmar data do fraflytningssyn com o locador",type:"Admin",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-08-03",end:"2026-08-10",cost:"—",hours:1,hoursEst:true,note:"Não presuma que é automático",group:"H"},
-{id:53,name:"Reservar van/caminhão — datas a definir",type:"Admin",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:"2026-08-10",end:"2026-08-17",cost:"—",hours:1,hoursEst:true,note:"Reserve mesmo sem data exata",group:"H"},
-{id:50,name:"Embalar caixas",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Natalia",start:"2026-08-24",end:"2026-09-06",cost:"—",hours:6,hoursEst:true,note:"Comprar caixas até a semana 36",group:"H"},
-{id:51,name:"Remover buchas/fixações da parede + tapar buracos",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-09-21",end:"2026-09-24",cost:"—",hours:2,hoursEst:true,note:"Exigência padrão para devolução do depósito",group:"H"},
-{id:52,name:"Limpeza final (flytterengøring)",type:"DIY",status:"Não iniciada",priority:"Alta",resp:"Ariel + Natalia",start:"2026-09-25",end:"2026-09-25",cost:"—",hours:6,hoursEst:true,note:"Reservar um dia inteiro, de preferência a dois",group:"H"},
-// --- P2 Porão ---
-{id:7,name:"Umidade ascendente — injeção química (porão + garagem)",type:"Professional",status:"Não iniciada",priority:"Crítica",resp:"Fugtspecialist",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:24,hoursEst:true,note:"Tarefa canônica — escopo ainda pendente, ver PROTOCOLO #8",group:"P2"},
-{id:8,name:"Defeitos elétricos do porão (#10–21)",type:"Professional",status:"Bloqueada",priority:"Alta",resp:"Elektriker",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:8,hoursEst:true,note:"Fio exposto na mellemgang — risco de incêndio",group:"P2"},
-// --- P3 Garagem ---
-{id:9,name:"Defeitos elétricos da garagem (#22–24)",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Elektriker",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"—",hours:4,hoursEst:true,note:"Cabos soltos, tomada solta, caixas de junção expostas",group:"P3"},
-{id:72,name:"Piso da garagem — avaliar epóxi pós-remediação",type:"DIY",status:"Bloqueada",priority:"Baixa",resp:"Ariel",start:null,end:null,cost:"—",hours:4,hoursEst:true,note:"Aguardar equilíbrio de umidade",group:"P3"},
-{id:42,name:"Madeira do telhado da garagem — inspecionar + tratar",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Ariel",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"—",hours:3,hoursEst:true,note:"Óleo de linhaça — não pintar",group:"P3"},
-// --- P4 Chaminé ---
-{id:3,name:"Inspeção da chaminé e avaliação da argamassa",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Skorstensfejer",start:"2026-09-07",end:"2026-09-11",cost:"—",hours:2,hoursEst:true,note:"Antes do primeiro uso da brændeovn",group:"P4"},
-{id:32,name:"Rejuntar argamassa da chaminé",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Murer",start:"2026-10-19",end:"2026-10-30",cost:"—",hours:6,hoursEst:true,note:"Orçar junto com a inspeção",group:"P4"},
-{id:31,name:"Pintar a alvenaria da chaminé de branco",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-11-02",end:"2026-11-04",cost:"—",hours:3,hoursEst:true,note:"Tinta resistente ao calor, mín. 150°C",group:"P4"},
-{id:6,name:"Envio da documentação da brændeovn ao Miljøstyrelsen",type:"Admin",status:"Não iniciada",priority:"Alta",resp:"Ariel",start:null,end:"2027-03-01",cost:"—",hours:1,hoursEst:true,note:"Prazo legal — sem início preenchido",group:"P4"},
-// --- P5 Acabamento ---
-{id:27,name:"Limpar armários da cozinha — dentro e fora",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Natalia",start:"2026-10-06",end:"2026-10-06",cost:"—",hours:2,hoursEst:true,note:"Depois do trabalho com poeira",group:"P5"},
-{id:35,name:"Todos os radiadores — checar válvulas termostáticas",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-10-05",end:"2026-10-05",cost:"—",hours:1,hoursEst:true,note:"Antes do primeiro inverno",group:"P5"},
-{id:33,name:"Madeira do teto — avaliar e tratar com Osmo",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-10-07",end:"2026-10-09",cost:"—",hours:4,hoursEst:true,note:"Uniformizar manchas",group:"P5"},
-{id:5,name:"Itens vermelhos do banheiro (tilstandsrapport) — remediação",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Håndværker (fliser)",start:"2026-10-12",end:"2026-10-16",cost:"—",hours:4,hoursEst:true,note:"Revisar lista completa",group:"P5"},
-{id:61,name:"Banheiro — instalar toalheiro sem aquecimento",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Ariel",start:"2026-10-12",end:"2026-10-12",cost:"—",hours:1,hoursEst:true,note:"Precisa de broca própria para azulejo",group:"P5"},
-{id:66,name:"Banheiro — medir gabinete do porão para troca no térreo",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Ariel",start:"2026-10-12",end:"2026-10-12",cost:"—",hours:1,hoursEst:true,note:"Só medição — troca bloqueada até o porão secar",group:"P5"},
-{id:30,name:"Balaustrada — pintar todos os elementos de branco",type:"DIY",status:"Não iniciada",priority:"Normal",resp:"Ariel",start:"2026-10-19",end:"2026-10-21",cost:"560",hours:4,hoursEst:true,note:"Fora da janela de mudança",group:"P5"},
-{id:29,name:"Balaustrada — adicionar corrimão de madeira (carvalho, Osmo)",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Ariel",start:"2026-11-16",end:"2026-11-20",cost:"300–600",hours:4,hoursEst:true,note:"Depois da pintura branca já assentada",group:"P5"},
-// --- P6 Cozinha ---
-{id:43,name:"Avaliação estrutural da parede no local",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Murermester",start:"2026-10-15",end:"2026-10-20",cost:"2.000–3.000",hours:2,hoursEst:true,note:"Declaração do corretor não é vinculante",group:"P6"},
-{id:48,name:"Visitas a showrooms (HTH, Invita, Kvik)",type:"Admin",status:"Não iniciada",priority:"Normal",resp:"Ariel + Natalia",start:"2026-11-01",end:"2026-11-15",cost:"—",hours:4,hoursEst:true,note:"Depois da avaliação da parede",group:"P6"},
-{id:44,name:"Remoção de parede entre cozinha e cômodo",type:"Professional",status:"Não iniciada",priority:"Normal",resp:"Murer",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"—",hours:8,hoursEst:true,note:"Sem início preenchido",group:"P6"},
-{id:46,name:"Layout do circuito elétrico da nova cozinha",type:"Professional",status:"Não iniciada",priority:"Alta",resp:"Elektriker",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"—",hours:4,hoursEst:true,note:"Sem início preenchido",group:"P6"},
-{id:37,name:"Troca de eletrodomésticos",type:"Professional",status:"Não iniciada",priority:"Baixa",resp:"Køkkenfirma",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"15.500–52.000",hours:4,hoursEst:true,note:"Sem início preenchido",group:"P6"},
-{id:47,name:"Reencanamento (VVS) para novo layout",type:"Professional",status:"Não iniciada",priority:"Normal",resp:"VVS-installatør",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:16,hoursEst:true,note:"Sem início preenchido",group:"P6"},
-{id:45,name:"Projeto e instalação completa da cozinha",type:"Professional",status:"Não iniciada",priority:"Normal",resp:"Køkkenfirma",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:40,hoursEst:true,note:"Sem início preenchido",group:"P6"},
-// --- P7 Jardim 2026 ---
-{id:71,name:"Lavagem de alta pressão — pátio/calçada (musgo/algas)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-03",end:"2026-10-04",cost:"500",hours:3,hoursEst:false,note:"3h no plano original · movido para outubro a pedido do Ariel (data exata não especificada)",group:"P7"},
-{id:84,name:"Macieira — checagem de frutos e folhas (outono)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-09-14",end:"2026-09-27",cost:"—",hours:1,hoursEst:true,note:"Separado de #68 — checar antes da queda outonal",group:"P7"},
-{id:69,name:"Cerejeira — anel de cobertura morta + iluminação",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-10",end:"2026-10-11",cost:"700",hours:3,hoursEst:false,note:"3h no plano original · movido para outubro a pedido do Ariel (data exata não especificada)",group:"P7"},
-{id:67,name:"Reparo da cerca viva da frente — inspeção + plano híbrido",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2026-10-17",end:"2026-10-24",cost:"1.170",hours:6,hoursEst:false,note:"6h no plano original · movido para outubro a pedido do Ariel (data exata não especificada)",group:"P7"},
-// --- P7b Jardim 2027 ---
-{id:68,name:"Macieira — primeira poda de renovação (inverno)",type:"DIY",status:"Não iniciada",priority:"—",resp:"Ariel",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"400",hours:2,hoursEst:true,note:"Época de dormência",group:"P7b"},
-{id:36,name:"Trampolim enterrado — 380cm redondo",type:"Professional",status:"Não iniciada",priority:"Baixa",resp:"Anlægsgartner",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"6.500–16.000",hours:8,hoursEst:true,note:"Escavação de teste antes — histórico de enchente",group:"P7b"},
-// --- P8 Estufa ---
-{id:70,name:"Limpar entulho + inspecionar vidros/aberturas/vedações",type:"DIY",status:"Não iniciada",priority:"—",resp:"Natalia",start:"2026-09-26",end:"2026-10-01",cost:"0",hours:4,hoursEst:false,note:"4h no plano original",group:"P8"},
-// --- P9 Casa Inteligente ---
-{id:39,name:"Base da casa inteligente — configurar Matter/Thread",type:"DIY",status:"Não iniciada",priority:"Baixa",resp:"Ariel",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:3,hoursEst:true,note:"Sem hub necessário ainda",group:"P9"},
-{id:38,name:"Monitoramento de umidade — porão (ALPSTUGA)",type:"DIY",status:"Bloqueada",priority:"Normal",resp:"Ariel",start:"2027-04-01",end:"2027-06-30",quarter:"2º tri 2027",cost:"—",hours:2,hoursEst:true,note:"Bloqueado até a elétrica ser aprovada",group:"P9"},
-// --- P10 Segurança ---
-{id:40,name:"Sistema de alarme residencial",type:"Professional",status:"Não iniciada",priority:"Baixa",resp:"Alarmfirma",start:"2027-01-01",end:"2027-03-31",quarter:"1º tri 2027",cost:"—",hours:3,hoursEst:true,note:"DIY automonitorado (Yale/Somfy) primeiro",group:"P10"},
-// --- P11 Aquecimento ---
-{id:41,name:"Split ar-ar — adição de resfriamento ao fjernvarme",type:"Professional",status:"Não iniciada",priority:"Baixa",resp:"VVS/Kølemontør",start:"2028-01-01",end:"2028-03-31",quarter:"1º tri 2028",cost:"—",hours:8,hoursEst:true,note:"Depois da elétrica, umidade e auditoria de isolamento",group:"P11"},
-];
+async function boot(){
+  try{
+    const [tasksRes, groupsRes] = await Promise.all([
+      fetch('./data.json', {cache:'no-store'}),
+      fetch('./groups.json', {cache:'no-store'})
+    ]);
+    if(!tasksRes.ok) throw new Error('data.json: HTTP '+tasksRes.status);
+    if(!groupsRes.ok) throw new Error('groups.json: HTTP '+groupsRes.status);
+    TASKS = await tasksRes.json();
+    GROUPS_CONFIG = await groupsRes.json();
 
-const MILESTONES = [
-  {d:"1 set 2026", l:"Overtagelse (entrega das chaves)"},
-  {d:"5 out 2026", l:"Elétrica concluída"},
-  {d:"19 out 2026", l:"Entrega do aluguel (fraflytningssyn)"},
-  {d:"1 mar 2027", l:"Documentação brændeovn (Miljøstyrelsen)"},
-];
+    document.getElementById('loadingState').style.display='none';
+
+    if(!Array.isArray(TASKS) || TASKS.length===0){
+      document.getElementById('syncDot').className='sync-dot stale';
+      document.getElementById('syncText').textContent='data.json está vazio — rode a GitHub Action "Sync Notion → data.json" (aba Actions, "Run workflow").';
+      document.getElementById('errorState').style.display='block';
+      document.getElementById('errorState').innerHTML =
+        'Nenhuma tarefa encontrada em <code>data.json</code>. Isso é esperado antes da primeira sincronização — '+
+        'vá em Actions → "Sync Notion → data.json" → Run workflow, depois recarregue esta página.';
+      return;
+    }
+
+    document.getElementById('syncDot').className='sync-dot';
+    document.getElementById('syncText').textContent = TASKS.length+' tarefas carregadas do Notion';
+    document.getElementById('appRoot').style.display='block';
+    document.getElementById('footerTaskCount').textContent = TASKS.length+' tarefas';
+    render();
+  }catch(err){
+    document.getElementById('loadingState').style.display='none';
+    document.getElementById('syncDot').className='sync-dot error';
+    document.getElementById('syncText').textContent='Falha ao carregar dados';
+    const box = document.getElementById('errorState');
+    box.style.display='block';
+    box.innerHTML =
+      '<b>Não consegui carregar data.json / groups.json.</b><br><br>'+
+      'Detalhe técnico: <code>'+ (err.message||err) +'</code><br><br>'+
+      'Causas prováveis: (1) você está abrindo o arquivo direto do disco (file://) em vez da URL do GitHub Pages — '+
+      'fetch() de arquivo local é bloqueado pelo navegador; abra a URL publicada do site. '+
+      '(2) data.json ou groups.json não existem no mesmo diretório deste index.html. '+
+      '(3) a GitHub Action de sync ainda não rodou.';
+  }
+}
 
 /* ======================= HELPERS ======================= */
+const PRIORITY_LABEL = {Critical:"Crítica", High:"Alta", Normal:"Normal", Low:"Baixa"};
+const STATUS_LABEL = {"Not Started":"Não iniciada","In Progress":"Em andamento","Blocked":"Bloqueada","Done":"Concluída"};
+
 function fmtDate(iso){
   if(!iso) return null;
   const d = new Date(iso+"T00:00:00");
   const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
   return d.getDate()+" "+months[d.getMonth()];
 }
-function dateRangeLabel(t){
-  if(t.quarter) return t.quarter;
-  if(!t.start && !t.end) return "—";
-  if(t.start && t.end && t.start!==t.end) return fmtDate(t.start)+" → "+fmtDate(t.end);
-  if(t.start) return fmtDate(t.start);
-  return fmtDate(t.end);
-}
 function statusClass(s){
-  if(s==="Concluída") return "done";
-  if(s==="Bloqueada") return "blocked";
+  if(s==="Done") return "done";
+  if(s==="Blocked") return "blocked";
   return "";
 }
-
-/* ======================= ISO WEEK HELPERS ======================= */
 function pad2(n){ return String(n).padStart(2,'0'); }
 function toISODate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
-
-// Returns {year, week, monday(Date)} for a given 'YYYY-MM-DD' string, using standard ISO-8601 week rules.
+const DAY_MS_CONST = 86400000;
 function getISOWeek(dateStr){
   const date = new Date(dateStr+'T00:00:00');
-  const dayNum = (date.getDay()+6)%7; // Mon=0 ... Sun=6
+  const dayNum = (date.getDay()+6)%7;
   const thursday = new Date(date);
   thursday.setDate(date.getDate() - dayNum + 3);
   const firstThursday = new Date(thursday.getFullYear(),0,4);
@@ -481,11 +290,8 @@ function getISOWeek(dateStr){
   const week = 1 + Math.round((thursday - firstThursday)/(7*DAY_MS_CONST));
   const monday = new Date(date);
   monday.setDate(date.getDate() - dayNum);
-  return {year: thursday.getFullYear(), week: week, monday: monday};
+  return {year: thursday.getFullYear(), week, monday};
 }
-const DAY_MS_CONST = 86400000;
-
-// Returns array of [weekKey, mondayDate] pairs a task touches. Quarter-only or dateless tasks return [].
 function taskWeeks(t){
   if(t.quarter) return [];
   const s = t.start || t.end;
@@ -504,178 +310,173 @@ function taskWeeks(t){
   return [...weeks.entries()];
 }
 
-/* ======================= RENDER GROUPS ======================= */
-const container = document.getElementById('groupContainer');
-let totalTasks = 0;
+/* ======================= RENDER ======================= */
+let GROUPS = [];
+let rowsWrap, ganttGrid;
 
-GROUPS.forEach(g=>{
-  const tasks = TASKS.filter(t=>t.group===g.key);
-  totalTasks += tasks.length;
+function render(){
+  // Build effective group list from tasks present, matched against config
+  const groupKeysInData = [...new Set(TASKS.map(t=>t.group))];
+  const configByKey = Object.fromEntries(GROUPS_CONFIG.map(g=>[g.key,g]));
+  const known = GROUPS_CONFIG.filter(g=>groupKeysInData.includes(g.key));
+  const unknownKeys = groupKeysInData.filter(k=>!configByKey[k]).sort();
+  const unknown = unknownKeys.map(k=>({key:k, label:k+' (grupo novo, sem cor definida ainda)', color:'var(--fallback)'}));
+  GROUPS = [...known, ...unknown];
 
-  const card = document.createElement('div');
-  card.className='group-card';
+  const container = document.getElementById('groupContainer');
+  container.innerHTML = '';
 
-  const header = document.createElement('div');
-  header.className='group-header';
-  header.style.setProperty('--gcolor', g.color);
-  header.id = 'group-'+g.key;
-  header.innerHTML = `
-    <span class="chev">▶</span>
-    <span class="gtitle">${g.label}</span>
-    <span class="gproject">${g.project}</span>
-    <span class="gcount">${tasks.length}</span>
-  `;
+  GROUPS.forEach(g=>{
+    const tasks = TASKS.filter(t=>t.group===g.key);
+    const card = document.createElement('div');
+    card.className='group-card';
 
-  const body = document.createElement('div');
-  body.className='group-body';
+    const header = document.createElement('div');
+    header.className='group-header';
+    header.style.setProperty('--gcolor', g.color);
+    header.id = 'group-'+encodeURIComponent(g.key);
+    header.innerHTML = `<span class="chev">▶</span><span class="gtitle">${g.label}</span><span class="gcount">${tasks.length}</span>`;
 
-  const table = document.createElement('table');
-  table.innerHTML = `
-    <thead><tr>
-      <th>#</th><th>Tarefa</th><th>Tipo</th><th>Status</th><th>Prioridade</th>
-      <th>Responsável</th><th>Início</th><th>Prazo</th><th>Horas</th><th>Custo (DKK)</th>
-      <th>Nota</th><th style="min-width:180px;">Seu comentário</th>
-    </tr></thead>
-    <tbody></tbody>
-  `;
-  const tbody = table.querySelector('tbody');
+    const body = document.createElement('div');
+    body.className='group-body';
 
-  tasks.forEach(t=>{
-    const tr = document.createElement('tr');
-    const weeksForTask = taskWeeks(t).map(([k])=>k);
-    tr.dataset.weeks = weeksForTask.join(',');
-    tr.innerHTML = `
-      <td class="tid">#${t.id}</td>
-      <td class="tname">${t.name}</td>
-      <td><span class="badge ${t.type}">${t.type}</span></td>
-      <td><span class="status-tag ${statusClass(t.status)}">${t.status}</span></td>
-      <td>${t.priority!=='—' ? `<span class="prio ${t.priority}">${t.priority}</span>` : '—'}</td>
-      <td class="guess">${t.resp}</td>
-      <td class="mono">${t.start ? fmtDate(t.start) : (t.quarter?'—':'—')}</td>
-      <td class="mono">${t.quarter ? t.quarter : (t.end ? fmtDate(t.end) : '—')}</td>
-      <td class="mono ${t.hoursEst?'est':''}">${t.hours}h</td>
-      <td class="mono">${t.cost}</td>
-      <td class="note-cell">${t.note}</td>
-      <td class="comment-cell"><input type="text" data-task="${t.id}" placeholder="ex.: mudar data para..." /></td>
-    `;
-    tbody.appendChild(tr);
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <thead><tr>
+        <th>#</th><th>Tarefa</th><th>Tipo</th><th>Status</th><th>Prioridade</th>
+        <th>Responsável</th><th>Início</th><th>Prazo</th><th>Horas</th><th>Custo (DKK)</th>
+        <th>Nota</th><th style="min-width:180px;">Seu comentário</th>
+      </tr></thead>
+      <tbody></tbody>`;
+    const tbody = table.querySelector('tbody');
+
+    tasks.forEach(t=>{
+      const tr = document.createElement('tr');
+      const weeksForTask = taskWeeks(t).map(([k])=>k);
+      tr.dataset.weeks = weeksForTask.join(',');
+      const priorityHtml = t.priority ? `<span class="prio ${t.priority}">${PRIORITY_LABEL[t.priority]||t.priority}</span>` : '—';
+      const respHtml = t.resp ? t.resp : '<span class="unset">— a definir</span>';
+      const startHtml = t.start ? fmtDate(t.start) : '—';
+      const endHtml = t.quarter ? t.quarter : (t.end ? fmtDate(t.end) : '—');
+      const hoursHtml = (t.hours===null || t.hours===undefined) ? '<span class="unset">—</span>' : t.hours+'h';
+      tr.innerHTML = `
+        <td class="tid">#${t.id ?? '—'}</td>
+        <td class="tname">${t.name}</td>
+        <td><span class="badge ${t.type}">${t.type||'—'}</span></td>
+        <td><span class="status-tag ${statusClass(t.status)}">${STATUS_LABEL[t.status]||t.status||'—'}</span></td>
+        <td>${priorityHtml}</td>
+        <td>${respHtml}</td>
+        <td class="mono">${startHtml}</td>
+        <td class="mono">${endHtml}</td>
+        <td class="mono">${hoursHtml}</td>
+        <td class="mono">${t.cost||'—'}</td>
+        <td class="note-cell">${t.note||''}</td>
+        <td class="comment-cell"><input type="text" data-task="${t.id}" placeholder="ex.: mudar data para..." /></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    body.appendChild(table);
+    card.appendChild(header);
+    card.appendChild(body);
+    container.appendChild(card);
+
+    header.addEventListener('click', ()=>{
+      header.classList.toggle('open');
+      body.classList.toggle('open');
+    });
   });
 
-  body.appendChild(table);
-  card.appendChild(header);
-  card.appendChild(body);
-  container.appendChild(card);
-
-  header.addEventListener('click', ()=>{
-    header.classList.toggle('open');
-    body.classList.toggle('open');
-  });
-});
-
-document.getElementById('taskCountStat').textContent = totalTasks;
-
-/* ======================= MILESTONE STRIP ======================= */
-const msStrip = document.getElementById('milestoneStrip');
-MILESTONES.forEach(m=>{
-  const chip = document.createElement('div');
-  chip.className='ms-chip';
-  chip.innerHTML = `<div class="d">${m.d}</div><div class="l">${m.l}</div>`;
-  msStrip.appendChild(chip);
-});
+  buildGantt();
+  buildWeekFilter();
+  initComments();
+}
 
 /* ======================= GANTT ======================= */
 const TIMELINE_START = new Date('2026-08-01T00:00:00');
 const TIMELINE_END   = new Date('2028-04-15T00:00:00');
-const DAY_MS = 86400000;
-const totalDays = (TIMELINE_END - TIMELINE_START)/DAY_MS;
 const PX_PER_DAY = 2.6;
-const gridWidth = totalDays*PX_PER_DAY;
 
-function dayOffset(iso){
-  return (new Date(iso+"T00:00:00") - TIMELINE_START)/DAY_MS;
-}
+function dayOffset(iso){ return (new Date(iso+"T00:00:00") - TIMELINE_START)/DAY_MS_CONST; }
 
-// aggregate per group
-const groupRanges = GROUPS.map(g=>{
-  const tasks = TASKS.filter(t=>t.group===g.key && (t.start || t.end));
-  if(tasks.length===0) return {...g, start:null, end:null};
-  let starts = tasks.map(t=>t.start||t.end).filter(Boolean);
-  let ends = tasks.map(t=>t.end||t.start).filter(Boolean);
-  const minStart = starts.reduce((a,b)=> new Date(a) < new Date(b) ? a : b);
-  const maxEnd = ends.reduce((a,b)=> new Date(a) > new Date(b) ? a : b);
-  return {...g, start:minStart, end:maxEnd};
-});
+function buildGantt(){
+  ganttGrid = document.getElementById('ganttGrid');
+  ganttGrid.innerHTML='';
 
-const ganttGrid = document.getElementById('ganttGrid');
+  const totalDays = (TIMELINE_END - TIMELINE_START)/DAY_MS_CONST;
+  const gridWidth = totalDays*PX_PER_DAY;
 
-// month header
-const monthsRow = document.createElement('div');
-monthsRow.className='gantt-months';
-monthsRow.style.paddingLeft='230px';
-let cursor = new Date(TIMELINE_START);
-while(cursor < TIMELINE_END){
-  const next = new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
-  const days = Math.min((next-cursor)/DAY_MS, (TIMELINE_END-cursor)/DAY_MS);
-  const w = days*PX_PER_DAY;
-  const label = cursor.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'});
-  const cell = document.createElement('div');
-  cell.className='gantt-month';
-  cell.style.width = w+'px';
-  cell.textContent = label;
-  monthsRow.appendChild(cell);
-  cursor = next;
-}
-ganttGrid.appendChild(monthsRow);
+  const groupRanges = GROUPS.map(g=>{
+    const tasks = TASKS.filter(t=>t.group===g.key && (t.start || t.end));
+    if(tasks.length===0) return {...g, start:null, end:null};
+    const starts = tasks.map(t=>t.start||t.end).filter(Boolean);
+    const ends = tasks.map(t=>t.end||t.start).filter(Boolean);
+    const minStart = starts.reduce((a,b)=> new Date(a) < new Date(b) ? a : b);
+    const maxEnd = ends.reduce((a,b)=> new Date(a) > new Date(b) ? a : b);
+    return {...g, start:minStart, end:maxEnd};
+  });
 
-// rows
-const rowsWrap = document.createElement('div');
-rowsWrap.className='gantt-rows';
-rowsWrap.style.width = (gridWidth+230)+'px';
+  const monthsRow = document.createElement('div');
+  monthsRow.className='gantt-months';
+  monthsRow.style.paddingLeft='230px';
+  let cursor = new Date(TIMELINE_START);
+  while(cursor < TIMELINE_END){
+    const next = new Date(cursor.getFullYear(), cursor.getMonth()+1, 1);
+    const days = Math.min((next-cursor)/DAY_MS_CONST, (TIMELINE_END-cursor)/DAY_MS_CONST);
+    const w = days*PX_PER_DAY;
+    const cell = document.createElement('div');
+    cell.className='gantt-month';
+    cell.style.width = w+'px';
+    cell.textContent = cursor.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'});
+    monthsRow.appendChild(cell);
+    cursor = next;
+  }
+  ganttGrid.appendChild(monthsRow);
 
-// today marker
-const today = new Date();
-if(today >= TIMELINE_START && today <= TIMELINE_END){
-  const marker = document.createElement('div');
-  marker.className='gantt-today';
-  marker.style.left = (230 + dayOffset(today.toISOString().slice(0,10))*PX_PER_DAY)+'px';
-  rowsWrap.appendChild(marker);
-}
+  rowsWrap = document.createElement('div');
+  rowsWrap.className='gantt-rows';
+  rowsWrap.style.width = (gridWidth+230)+'px';
 
-groupRanges.forEach(g=>{
-  const row = document.createElement('div');
-  row.className='gantt-row';
-
-  const label = document.createElement('div');
-  label.className='gantt-label';
-  label.textContent = g.label;
-  label.title = g.label;
-  label.addEventListener('click', ()=> scrollToGroup(g.key));
-
-  const track = document.createElement('div');
-  track.className='gantt-track';
-
-  if(g.start && g.end){
-    const left = dayOffset(g.start)*PX_PER_DAY;
-    const width = Math.max((dayOffset(g.end)-dayOffset(g.start))*PX_PER_DAY, 4);
-    const bar = document.createElement('div');
-    bar.className='gantt-bar';
-    bar.style.left = left+'px';
-    bar.style.width = width+'px';
-    bar.style.background = g.color;
-    bar.title = g.label+' · '+fmtDate(g.start)+' → '+fmtDate(g.end);
-    bar.addEventListener('click', ()=> scrollToGroup(g.key));
-    track.appendChild(bar);
+  const today = new Date();
+  if(today >= TIMELINE_START && today <= TIMELINE_END){
+    const marker = document.createElement('div');
+    marker.className='gantt-today';
+    marker.style.left = (230 + dayOffset(toISODate(today))*PX_PER_DAY)+'px';
+    rowsWrap.appendChild(marker);
   }
 
-  row.appendChild(label);
-  row.appendChild(track);
-  rowsWrap.appendChild(row);
-});
+  groupRanges.forEach(g=>{
+    const row = document.createElement('div');
+    row.className='gantt-row';
+    const label = document.createElement('div');
+    label.className='gantt-label';
+    label.textContent = g.label;
+    label.title = g.label;
+    label.addEventListener('click', ()=> scrollToGroup(g.key));
+    const track = document.createElement('div');
+    track.className='gantt-track';
+    if(g.start && g.end){
+      const left = dayOffset(g.start)*PX_PER_DAY;
+      const width = Math.max((dayOffset(g.end)-dayOffset(g.start))*PX_PER_DAY, 4);
+      const bar = document.createElement('div');
+      bar.className='gantt-bar';
+      bar.style.left = left+'px';
+      bar.style.width = width+'px';
+      bar.style.background = g.color;
+      bar.title = g.label+' · '+fmtDate(g.start)+' → '+fmtDate(g.end);
+      bar.addEventListener('click', ()=> scrollToGroup(g.key));
+      track.appendChild(bar);
+    }
+    row.appendChild(label);
+    row.appendChild(track);
+    rowsWrap.appendChild(row);
+  });
 
-ganttGrid.appendChild(rowsWrap);
+  ganttGrid.appendChild(rowsWrap);
+}
 
 function scrollToGroup(key){
-  const header = document.getElementById('group-'+key);
+  const header = document.getElementById('group-'+encodeURIComponent(key));
   if(!header) return;
   if(!header.classList.contains('open')){
     header.classList.add('open');
@@ -684,39 +485,46 @@ function scrollToGroup(key){
   header.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
-/* ======================= WEEK FILTER BAR ======================= */
-const weekMap = new Map(); // key -> {monday, count}
-TASKS.forEach(t=>{
-  taskWeeks(t).forEach(([key, monday])=>{
-    if(!weekMap.has(key)) weekMap.set(key, {monday, count:0});
-    weekMap.get(key).count++;
-  });
-});
-const sortedWeeks = [...weekMap.entries()].sort((a,b)=> a[1].monday - b[1].monday);
-
-const weekButtonsEl = document.getElementById('weekButtons');
+/* ======================= WEEK FILTER ======================= */
 let currentWeekFilter = null;
+let weekMap = new Map();
+let weekBandEl = null;
 
-const resetBtn = document.createElement('button');
-resetBtn.className = 'week-btn reset active';
-resetBtn.textContent = 'Todas as semanas';
-resetBtn.addEventListener('click', ()=> applyWeekFilter(null));
-weekButtonsEl.appendChild(resetBtn);
+function buildWeekFilter(){
+  weekMap = new Map();
+  TASKS.forEach(t=>{
+    taskWeeks(t).forEach(([key, monday])=>{
+      if(!weekMap.has(key)) weekMap.set(key, {monday, count:0});
+      weekMap.get(key).count++;
+    });
+  });
+  const sortedWeeks = [...weekMap.entries()].sort((a,b)=> a[1].monday - b[1].monday);
 
-sortedWeeks.forEach(([key, info])=>{
-  const monday = info.monday;
-  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
-  const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-  const rangeLabel = monday.getDate()+" "+months[monday.getMonth()]+"–"+sunday.getDate()+" "+months[sunday.getMonth()];
-  const weekNumLabel = key.split('-W')[1];
-  const yearLabel = key.split('-W')[0];
-  const btn = document.createElement('button');
-  btn.className = 'week-btn';
-  btn.dataset.week = key;
-  btn.innerHTML = `<span class="wn">Sem ${weekNumLabel}${yearLabel!=='2026' ? " '"+yearLabel.slice(2) : ''}</span><span class="wd">${rangeLabel}</span><span class="wc">${info.count}</span>`;
-  btn.addEventListener('click', ()=> applyWeekFilter(currentWeekFilter===key ? null : key));
-  weekButtonsEl.appendChild(btn);
-});
+  const weekButtonsEl = document.getElementById('weekButtons');
+  weekButtonsEl.innerHTML='';
+  currentWeekFilter = null;
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'week-btn reset active';
+  resetBtn.textContent = 'Todas as semanas';
+  resetBtn.addEventListener('click', ()=> applyWeekFilter(null));
+  weekButtonsEl.appendChild(resetBtn);
+
+  sortedWeeks.forEach(([key, info])=>{
+    const monday = info.monday;
+    const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+    const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+    const rangeLabel = monday.getDate()+" "+months[monday.getMonth()]+"–"+sunday.getDate()+" "+months[sunday.getMonth()];
+    const weekNumLabel = key.split('-W')[1];
+    const yearLabel = key.split('-W')[0];
+    const btn = document.createElement('button');
+    btn.className = 'week-btn';
+    btn.dataset.week = key;
+    btn.innerHTML = `<span class="wn">Sem ${weekNumLabel}${yearLabel!=='2026' ? " '"+yearLabel.slice(2) : ''}</span><span class="wd">${rangeLabel}</span><span class="wc">${info.count}</span>`;
+    btn.addEventListener('click', ()=> applyWeekFilter(currentWeekFilter===key ? null : key));
+    weekButtonsEl.appendChild(btn);
+  });
+}
 
 function applyWeekFilter(weekKey){
   currentWeekFilter = weekKey;
@@ -724,7 +532,6 @@ function applyWeekFilter(weekKey){
     const isReset = b.classList.contains('reset');
     b.classList.toggle('active', isReset ? weekKey===null : b.dataset.week===weekKey);
   });
-
   document.querySelectorAll('.group-card').forEach(card=>{
     const rows = [...card.querySelectorAll('tbody tr')];
     let visibleCount = 0;
@@ -745,73 +552,60 @@ function applyWeekFilter(weekKey){
       card.style.display='';
     }
   });
-
   updateGanttWeekBand(weekKey);
 }
 
-let weekBandEl = null;
 function updateGanttWeekBand(weekKey){
   if(weekBandEl){ weekBandEl.remove(); weekBandEl = null; }
-  if(!weekKey) return;
+  if(!weekKey || !rowsWrap) return;
   const info = weekMap.get(weekKey);
   if(!info) return;
   const left = 230 + dayOffset(toISODate(info.monday))*PX_PER_DAY;
   const width = 7*PX_PER_DAY;
   weekBandEl = document.createElement('div');
-  weekBandEl.style.position='absolute';
-  weekBandEl.style.top='0';
-  weekBandEl.style.bottom='0';
-  weekBandEl.style.left=left+'px';
-  weekBandEl.style.width=width+'px';
-  weekBandEl.style.background='rgba(62,124,177,0.14)';
-  weekBandEl.style.borderLeft='1px solid var(--accent)';
-  weekBandEl.style.borderRight='1px solid var(--accent)';
-  weekBandEl.style.pointerEvents='none';
-  weekBandEl.style.zIndex='0';
+  Object.assign(weekBandEl.style, {
+    position:'absolute', top:'0', bottom:'0', left:left+'px', width:width+'px',
+    background:'rgba(62,124,177,0.14)', borderLeft:'1px solid var(--accent)',
+    borderRight:'1px solid var(--accent)', pointerEvents:'none', zIndex:'0'
+  });
   rowsWrap.appendChild(weekBandEl);
 }
 
-/* ======================= COMMENTS (persisted via window.storage) ======================= */
-const commentInputs = document.querySelectorAll('.comment-cell input');
+/* ======================= COMMENTS (localStorage — GitHub Pages has no window.storage) ======================= */
+const STORAGE_KEY = 'enemaerket6-plan-comments';
 let commentsState = {};
 
-async function loadComments(){
+function initComments(){
   try{
-    const result = await window.storage.get('enemaerket6-plan-comments');
-    if(result && result.value){
-      commentsState = JSON.parse(result.value);
-      commentInputs.forEach(inp=>{
-        const id = inp.dataset.task;
-        if(commentsState[id]){
-          inp.value = commentsState[id];
-          inp.classList.add('has-comment');
-        }
-      });
+    const raw = localStorage.getItem(STORAGE_KEY);
+    commentsState = raw ? JSON.parse(raw) : {};
+  }catch(e){ commentsState = {}; }
+
+  document.querySelectorAll('.comment-cell input').forEach(inp=>{
+    const id = inp.dataset.task;
+    if(commentsState[id]){
+      inp.value = commentsState[id];
+      inp.classList.add('has-comment');
     }
-  }catch(e){ /* no stored comments yet */ }
+    inp.addEventListener('input', ()=>{
+      if(inp.value.trim()){
+        commentsState[id] = inp.value;
+        inp.classList.add('has-comment');
+      }else{
+        delete commentsState[id];
+        inp.classList.remove('has-comment');
+      }
+      updatePendingCount();
+      saveComments();
+    });
+  });
   updatePendingCount();
 }
 
-async function saveComments(){
-  try{
-    await window.storage.set('enemaerket6-plan-comments', JSON.stringify(commentsState));
-  }catch(e){ console.error('storage error', e); }
+function saveComments(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(commentsState)); }
+  catch(e){ console.error('localStorage error', e); }
 }
-
-commentInputs.forEach(inp=>{
-  inp.addEventListener('input', ()=>{
-    const id = inp.dataset.task;
-    if(inp.value.trim()){
-      commentsState[id] = inp.value;
-      inp.classList.add('has-comment');
-    }else{
-      delete commentsState[id];
-      inp.classList.remove('has-comment');
-    }
-    updatePendingCount();
-  });
-  inp.addEventListener('blur', saveComments);
-});
 
 function updatePendingCount(){
   const n = Object.keys(commentsState).length;
@@ -829,7 +623,7 @@ function generateChanges(){
   }
   let lines = ['Mudanças propostas ao plano — Enemærket 6', ''];
   ids.forEach(id=>{
-    const t = TASKS.find(x=>x.id==id);
+    const t = TASKS.find(x=>String(x.id)===String(id));
     if(!t) return;
     lines.push(`#${t.id} — ${t.name} (Grupo ${t.group})`);
     lines.push(`  Comentário: ${commentsState[id]}`);
@@ -839,11 +633,11 @@ function generateChanges(){
   box.style.display='block';
 }
 
-async function clearAllComments(){
+function clearAllComments(){
   if(!confirm('Limpar todos os comentários salvos?')) return;
   commentsState = {};
-  commentInputs.forEach(inp=>{ inp.value=''; inp.classList.remove('has-comment'); });
-  await saveComments();
+  document.querySelectorAll('.comment-cell input').forEach(inp=>{ inp.value=''; inp.classList.remove('has-comment'); });
+  saveComments();
   updatePendingCount();
   document.getElementById('outputBox').style.display='none';
 }
@@ -857,7 +651,7 @@ function copyOutput(){
   setTimeout(()=> msg.style.display='none', 1800);
 }
 
-loadComments();
+boot();
 </script>
 </body>
 </html>
