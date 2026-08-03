@@ -188,16 +188,16 @@
     "priority": "Critical",
     "resp": "Natalia",
     "start": "2026-08-03",
-    "end": "2026-09-05",
+    "end": "2026-08-07",
     "quarter": null,
-    "cost": "—",
-    "hours": null,
+    "cost": "0",
+    "hours": 1,
     "note": "Concluído 02/ago: luz + internet transferidos por Ariel; água + fjernvarme ficaram a cargo da vendedora. Solceller: propriedade do VE-anlæg já transferida (borger.dk). ⚠️ Isso NÃO inclui o cadastro no Vindstød (ve.vindstoed.dk) para receber o pristillæg pelo excedente — esse é um passo separado, ainda em aberto, sem tarefa própria no Notion. Seguro da casa e ejerskifteforsikring também já resolvidos (não havia tarefa específica para isso).",
     "group": "MoveIn B · Semana 1 Limpeza",
     "respRaw": "Natalia",
     "startRaw": "2026-08-03",
-    "dueRaw": "2026-09-05",
-    "costRaw": null
+    "dueRaw": "2026-08-07",
+    "costRaw": 0
   },
   {
     "id": 14,
