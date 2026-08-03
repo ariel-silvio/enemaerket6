@@ -75,6 +75,24 @@
   }
   .copied-msg{font-size:12px;color:var(--ok);font-weight:600;margin-left:6px;display:none;}
 
+  .sticky-nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;background:var(--paper-card);
+    border-bottom:1px solid var(--line);box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    transform:translateY(-100%);transition:transform .18s ease;
+  }
+  .sticky-nav.visible{transform:translateY(0);}
+  .sticky-nav-inner{
+    max-width:1360px;margin:0 auto;padding:8px 24px;display:flex;align-items:center;gap:14px;
+  }
+  .sticky-week-buttons{
+    display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;flex:1;min-width:0;
+  }
+  .sticky-week-buttons .week-btn{flex-shrink:0;padding:5px 10px;}
+  .sticky-week-buttons .week-btn .wd{display:none;}
+  .sticky-nav .pending-count{flex-shrink:0;white-space:nowrap;border-left:1px solid var(--line);padding-left:14px;}
+  @media (max-width:700px){ .sticky-nav .pending-count{display:none;} }
+
   .week-section{margin-bottom:24px;}
   .week-section h2{font-size:16px;margin-bottom:4px;}
   .week-section .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
@@ -182,6 +200,13 @@
 </head>
 <body>
 
+<div class="sticky-nav" id="stickyNav">
+  <div class="sticky-nav-inner">
+    <div class="sticky-week-buttons" id="stickyWeekButtons"></div>
+    <span class="pending-count" id="stickyPendingCount"></span>
+  </div>
+</div>
+
 <div class="hero">
   <h1>Enemærket 6, 8240 Risskov</h1>
   <div class="addr">VILA 1968 · 110 M² ÚTIL · 100 M² PORÃO · 875 M² TERRENO + GARAGEM</div>
@@ -231,7 +256,7 @@
       </div>
     </div>
 
-    <div class="week-section">
+    <div class="week-section" id="weekSection">
       <h2>Filtrar por semana (ISO)</h2>
       <div class="hint">Clique numa semana para ver só as tarefas marcadas para ela. Tarefas só com trimestre (sem dia exato) não aparecem em nenhum filtro de semana.</div>
       <div class="week-buttons" id="weekButtons"></div>
@@ -845,6 +870,29 @@ let currentWeekFilter = null;
 let weekMap = new Map();
 let weekBandEl = null;
 
+function makeResetBtn(){
+  const btn = document.createElement('button');
+  btn.className = 'week-btn reset active';
+  btn.textContent = 'Todas as semanas';
+  btn.addEventListener('click', ()=> applyWeekFilter(null));
+  return btn;
+}
+
+function makeWeekBtn(key, info){
+  const monday = info.monday;
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const rangeLabel = monday.getDate()+" "+months[monday.getMonth()]+"–"+sunday.getDate()+" "+months[sunday.getMonth()];
+  const weekNumLabel = key.split('-W')[1];
+  const yearLabel = key.split('-W')[0];
+  const btn = document.createElement('button');
+  btn.className = 'week-btn';
+  btn.dataset.week = key;
+  btn.innerHTML = `<span class="wn">Sem ${weekNumLabel}${yearLabel!=='2026' ? " '"+yearLabel.slice(2) : ''}</span><span class="wd">${rangeLabel}</span><span class="wc">${info.count}</span>`;
+  btn.addEventListener('click', ()=> applyWeekFilter(currentWeekFilter===key ? null : key));
+  return btn;
+}
+
 function buildWeekFilter(){
   weekMap = new Map();
   TASKS.forEach(t=>{
@@ -856,29 +904,36 @@ function buildWeekFilter(){
   const sortedWeeks = [...weekMap.entries()].sort((a,b)=> a[1].monday - b[1].monday);
 
   const weekButtonsEl = document.getElementById('weekButtons');
+  const stickyButtonsEl = document.getElementById('stickyWeekButtons');
   weekButtonsEl.innerHTML='';
+  stickyButtonsEl.innerHTML='';
   currentWeekFilter = null;
 
-  const resetBtn = document.createElement('button');
-  resetBtn.className = 'week-btn reset active';
-  resetBtn.textContent = 'Todas as semanas';
-  resetBtn.addEventListener('click', ()=> applyWeekFilter(null));
-  weekButtonsEl.appendChild(resetBtn);
+  weekButtonsEl.appendChild(makeResetBtn());
+  stickyButtonsEl.appendChild(makeResetBtn());
 
   sortedWeeks.forEach(([key, info])=>{
-    const monday = info.monday;
-    const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
-    const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-    const rangeLabel = monday.getDate()+" "+months[monday.getMonth()]+"–"+sunday.getDate()+" "+months[sunday.getMonth()];
-    const weekNumLabel = key.split('-W')[1];
-    const yearLabel = key.split('-W')[0];
-    const btn = document.createElement('button');
-    btn.className = 'week-btn';
-    btn.dataset.week = key;
-    btn.innerHTML = `<span class="wn">Sem ${weekNumLabel}${yearLabel!=='2026' ? " '"+yearLabel.slice(2) : ''}</span><span class="wd">${rangeLabel}</span><span class="wc">${info.count}</span>`;
-    btn.addEventListener('click', ()=> applyWeekFilter(currentWeekFilter===key ? null : key));
-    weekButtonsEl.appendChild(btn);
+    weekButtonsEl.appendChild(makeWeekBtn(key, info));
+    stickyButtonsEl.appendChild(makeWeekBtn(key, info));
   });
+
+  initStickyNav();
+}
+
+/* Sticky nav: mirrors the week filter (both sets share .week-btn, so
+   applyWeekFilter's querySelectorAll('.week-btn') already keeps them in sync)
+   plus the pending-comment count, shown once the original row scrolls out of view. */
+let stickyNavObserver = null;
+function initStickyNav(){
+  if(stickyNavObserver) return; // weekSection element is stable across re-renders
+  const target = document.getElementById('weekSection');
+  const nav = document.getElementById('stickyNav');
+  if(!target || !nav) return;
+  stickyNavObserver = new IntersectionObserver(([entry])=>{
+    const scrolledPast = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+    nav.classList.toggle('visible', scrolledPast);
+  }, {threshold:0});
+  stickyNavObserver.observe(target);
 }
 
 function applyWeekFilter(weekKey){
@@ -964,7 +1019,9 @@ function saveComments(){
 
 function updatePendingCount(){
   const n = Object.keys(commentsState).length;
-  document.getElementById('pendingCount').textContent = n+' comentário'+(n===1?'':'s')+' pendente'+(n===1?'':'s');
+  const text = n+' comentário'+(n===1?'':'s')+' pendente'+(n===1?'':'s');
+  document.getElementById('pendingCount').textContent = text;
+  document.getElementById('stickyPendingCount').textContent = text;
 }
 
 function generateChanges(){
