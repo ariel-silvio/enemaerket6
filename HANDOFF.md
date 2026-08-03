@@ -61,7 +61,7 @@ data.json                        — generated output. Currently seeded as [] (e
                                     export script has NOT yet been run successfully against
                                     live Notion. See Status below.
 scripts/export_notion.py         — the sync script. Stdlib-only (urllib), no pip deps.
-.github/workflows/sync-notion.yml — GitHub Action: workflow_dispatch + daily cron 05:30 UTC.
+.github/workflows/sync-notion.yml — GitHub Action: workflow_dispatch + hourly cron (on the hour).
 SETUP.md                         — step-by-step for Ariel: create Notion integration, share
                                     both databases with it, add NOTION_TOKEN repo secret.
 ```

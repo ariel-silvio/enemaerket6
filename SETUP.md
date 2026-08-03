@@ -1,6 +1,6 @@
 # Setup — Notion → GitHub Pages sync
 
-One-time setup, then it runs itself daily (and on demand).
+One-time setup, then it runs itself hourly (and on demand).
 
 ## 1. Create a Notion integration
 
@@ -45,8 +45,8 @@ Enable GitHub Pages: **Settings → Pages → Source: Deploy from a branch → m
 Notion API error body, which almost always tells you exactly what's wrong (usually: database
 not shared with the integration).
 
-After that, it re-runs automatically every day at 05:30 UTC. Trigger it manually any time you
-want a fresh pull without waiting.
+After that, it re-runs automatically every hour, on the hour. Trigger it manually any time you
+want a fresh pull without waiting for the next hour.
 
 ## 6. Optional — edit the plan from the webpage
 
