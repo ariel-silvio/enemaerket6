@@ -159,12 +159,31 @@ session. If that count changes, double check the filter still catches everything
    Browsers block local-file fetches. This is expected and handled — `index.html` shows an
    error state explaining this — but don't "fix" it by trying to inline the data again; that
    reintroduces the duplication problem this whole migration was meant to solve.
-4. **Notion task titles are mostly English**, not Portuguese, even though the audience
-   (Natalia) prefers PT-BR for shared docs (per longstanding preference — see any prior
-   project memory if available to you). This was flagged to Ariel as a tradeoff of making
-   Notion canonical, not fixed in code. Don't build a translation layer without being asked —
-   that's the same "extra file to patch what Notion doesn't have" pattern that was explicitly
-   rejected for Responsible/Hours.
+4. **Notion content should be written in Portuguese going forward.** It used to be mostly
+   English (flagged here as a known tradeoff of making Notion canonical), but Ariel asked for
+   Natalia to be able to use the page without touching Notion, so on 2026-08-03 every visible
+   task's `Task` and `Notes` were translated directly in Notion — 62 of 77 tasks, everything
+   except the `[DUPLICATE]`/`[SUPERSEDED]` rows (already filtered out of `data.json`, so not
+   worth touching) and the handful of tasks added after 2026-08-02 that were already PT-BR.
+   This was a one-time data cleanup done through Notion's API, **not** a code-side translation
+   layer — that distinction matters, because a translation layer is still the wrong move for
+   the same reason it was rejected for Responsible/Hours: it'd be an extra thing to keep in
+   sync with Notion instead of just writing Notion correctly in the first place. Concretely,
+   this means: **write new `Task`/`Notes` content in Portuguese from the start**, whether you're
+   adding it yourself or on Ariel's behalf. Keep Danish administrative/technical terms as-is
+   where there's no clean equivalent and the convention is already established — tilstandsrapport,
+   brændeovn, VVS-mester, elinstallatør, murermester, skorstensfejer, byggetilladelse, BR18,
+   fjernvarme, solceller, genbrugsstation, Miljøstyrelsen, Vindstød, borger.dk,
+   håndværkerfradrag — plus brand/product names and task-ID cross-references, unchanged.
+   If English content creeps back in over time, that's drift to fix in Notion again, not a
+   sign to build tooling around it.
+5. **Watch for mangled unicode escapes in Notion text properties.** Found and fixed two during
+   the 2026-08-03 translation pass: `Notes` containing the literal characters `bru00f8nd`
+   instead of `brønd`, and `dormu00eancia` instead of `dormência` — i.e. a `\uXXXX` escape that
+   got written out as literal text instead of being decoded, from some past write (unclear
+   which). If you see other `\u` -looking fragments sitting in Notion text, it's the same bug
+   pattern, not intentional content — fix in place, don't propagate it into a translation or
+   any other edit.
 
 ## Open items / suggested next steps, roughly in priority order
 
