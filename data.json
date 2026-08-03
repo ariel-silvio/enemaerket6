@@ -130,14 +130,14 @@
     "start": "2026-09-01",
     "end": "2026-09-01",
     "quarter": null,
-    "cost": "—",
-    "hours": null,
+    "cost": "0",
+    "hours": 1.5,
     "note": "Photograph all walls, floors, and ceilings before moving anything. Especially: behind radiators, under carpets, behind built-in wardrobes. Dated photos = baseline evidence for insurance and future contractors.",
     "group": "MoveIn A · Dia 1",
     "respRaw": "Both",
     "startRaw": "2026-09-01",
     "dueRaw": "2026-09-01",
-    "costRaw": null
+    "costRaw": 0
   },
   {
     "id": 11,
@@ -150,14 +150,14 @@
     "start": "2026-09-01",
     "end": "2026-09-01",
     "quarter": null,
-    "cost": "—",
-    "hours": null,
+    "cost": "0",
+    "hours": 0.5,
     "note": "Day one 1 Sep at 12:00: photograph electricity meter, water meter, and heat meter readings. Dated. Non-negotiable for dispute prevention with seller.",
     "group": "MoveIn A · Dia 1",
     "respRaw": "Both",
     "startRaw": "2026-09-01",
     "dueRaw": "2026-09-01",
-    "costRaw": null
+    "costRaw": 0
   },
   {
     "id": 12,
@@ -1286,18 +1286,18 @@
     "type": "DIY",
     "status": "Not Started",
     "priority": "High",
-    "resp": null,
+    "resp": "Ariel",
     "start": "2026-09-01",
     "end": "2026-09-01",
     "quarter": null,
-    "cost": "—",
-    "hours": null,
+    "cost": "0",
+    "hours": 1,
     "note": "Escopo do dia 1, restrito: localizar a bomba no bru00f8nd do lado norte, confirmar se está ligada/funcionando (escutar o motor), e aprender como operar/resetar manualmente, se der. NENHUMA chamada a profissional no dia 1, mesmo que a bomba pareça com problema — só anotar o que foi observado. A inspeção completa (limpeza, troca de sensor/válvula se preciso, teste do dreno) vai para a #82, em outro dia da semana 1. ⚠️ Isso diverge da recomendação da Natalia de chamar um VVS-mester imediatamente se a bomba estiver silenciosa/travada — decisão do Ariel de adiar essa ligação para depois do dia 1.",
     "group": "MoveIn A · Dia 1",
-    "respRaw": null,
+    "respRaw": "Ariel",
     "startRaw": "2026-09-01",
     "dueRaw": "2026-09-01",
-    "costRaw": null
+    "costRaw": 0
   },
   {
     "id": 74,
