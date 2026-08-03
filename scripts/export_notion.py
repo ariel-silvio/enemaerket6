@@ -180,8 +180,12 @@ def main():
         elif gantt_start and not gantt_end:
             gantt_end = gantt_start
 
+        cost_value = prop_number(props, "Est. Cost (DKK)")
+
         tasks.append({
             "id": prop_unique_id(props, "Task ID"),
+            # Notion page UUID — the editor needs it to PATCH this row back to Notion.
+            "pageId": t["id"],
             "name": title,
             "type": prop_select(props, "Type"),
             "status": prop_select(props, "Status"),
@@ -190,10 +194,17 @@ def main():
             "start": gantt_start,
             "end": gantt_end,
             "quarter": quarter_label,
-            "cost": format_cost(prop_number(props, "Est. Cost (DKK)")),
+            "cost": format_cost(cost_value),
             "hours": prop_number(props, "Est. Hours (DIY)"),
             "note": prop_rich_text(props, "Notes"),
             "group": group_key,
+            # Raw values as stored in Notion. "start"/"end"/"cost"/"resp" above are
+            # derived for display (quarter fallback, thousands separators, pt-BR labels)
+            # and would not round-trip; these are what the editor reads and writes.
+            "respRaw": assigned,
+            "startRaw": start,
+            "dueRaw": due_start or due_end,
+            "costRaw": cost_value,
         })
 
     tasks.sort(key=lambda x: (x["id"] is None, x["id"]))

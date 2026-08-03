@@ -150,6 +150,29 @@
   .comment-cell input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent);}
   .comment-cell input.has-comment{border-color:var(--accent);background:#F1F6FA;}
 
+  .edit-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .edit-bar input[type=password]{
+    font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;border:1px solid var(--line);
+    border-radius:3px;padding:8px 10px;background:#fff;min-width:200px;
+  }
+  .edit-status{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .edit-status.on{color:var(--ok);font-weight:600;}
+  .edit-status.err{color:var(--danger);}
+  .ed{border-bottom:1px dashed transparent;}
+  body.editing .ed{cursor:pointer;border-bottom-color:#B9C6D3;}
+  body.editing .ed:hover{background:#EAF2F8;border-bottom-color:var(--accent);}
+  .ed.saving{opacity:0.45;}
+  .ed.saved{background:#E4EEE6;}
+  .ed.failed{background:#F8DAD0;}
+  .ed-ctl{
+    font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;border:1px solid var(--accent);
+    border-radius:3px;padding:3px 5px;background:#fff;color:var(--ink);max-width:180px;
+  }
+  /* Marks a value written to Notion but not yet present in the synced data.json. */
+  .ed-pending::after{
+    content:"•";color:var(--accent);font-weight:700;margin-left:3px;
+  }
+
   .legend{font-size:11.5px;color:var(--ink-soft);margin:18px 0 6px;line-height:1.7;}
   .legend b{color:var(--ink);}
   footer{margin-top:40px;font-size:11.5px;color:var(--ink-soft);text-align:center;padding-bottom:10px;}
@@ -178,11 +201,21 @@
   <div id="appRoot" style="display:none;">
 
     <div class="panel">
-      <h2>Ajustar o plano</h2>
+      <h2>Editar o plano</h2>
       <p>
-        O Notion é a fonte oficial dos dados — datas, status, custo e responsável vêm de lá e são atualizados
-        automaticamente. Este comentário serve para pedidos rápidos (ex.: "mudar data para 20 set") que eu depois
-        aplico diretamente no Notion, não neste arquivo. Comentários ficam salvos só neste navegador.
+        Com a edição ativada, clique em qualquer campo sublinhado da tabela — responsável, início, prazo,
+        custo, horas, status, prioridade, tipo e nota — para alterá-lo. A mudança é gravada direto no Notion.
+        Um ponto azul (<span style="color:var(--accent);font-weight:700;">•</span>) marca valores já gravados
+        no Notion que ainda não apareceram na última sincronização.
+      </p>
+      <div class="edit-bar" id="editBar"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Comentários</h2>
+      <p>
+        Para pedidos que não são uma alteração direta de campo (ex.: "dividir esta tarefa em duas"). Comentários
+        ficam salvos só neste navegador e servem para copiar num chat com o Claude, que então edita o Notion.
       </p>
       <div class="actions">
         <button onclick="generateChanges()">Gerar lista de mudanças</button>
@@ -223,6 +256,11 @@
 </div>
 
 <script>
+/* ======================= CONFIG ======================= */
+/* URL of the Cloudflare Worker that writes edits back to Notion.
+   Leave empty to disable editing entirely. See worker/README.md to deploy it. */
+const WORKER_URL = "";
+
 /* ======================= LOAD DATA ======================= */
 let GROUPS_CONFIG = [];
 let TASKS = [];
@@ -254,7 +292,9 @@ async function boot(){
     document.getElementById('syncText').textContent = TASKS.length+' tarefas carregadas do Notion';
     document.getElementById('appRoot').style.display='block';
     document.getElementById('footerTaskCount').textContent = TASKS.length+' tarefas';
+    applyPendingEdits();
     render();
+    initEditBar();
   }catch(err){
     document.getElementById('loadingState').style.display='none';
     document.getElementById('syncDot').className='sync-dot error';
@@ -320,6 +360,87 @@ function taskWeeks(t){
   return [...weeks.entries()];
 }
 
+const RESP_LABEL = {Ariel:"Ariel", Natalia:"Natalia", Contractor:"Contratado", Both:"Ariel + Natalia"};
+
+/* Mirrors format_cost() in scripts/export_notion.py: 12000 -> "12.000". */
+function fmtCost(v){
+  if(v===null || v===undefined || v==='') return '—';
+  return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/* Date columns show what is actually set in Notion (startRaw/dueRaw), not the
+   quarter-derived range the Gantt uses — otherwise clicking a date that Notion
+   never had would open an empty editor. Falls back to the old display for a
+   data.json produced before the editor existed (raw fields absent). */
+function displayStart(t){
+  if(t.startRaw === undefined) return t.start ? fmtDate(t.start) : '—';
+  return t.startRaw ? fmtDate(t.startRaw) : '—';
+}
+function displayDue(t){
+  if(t.dueRaw === undefined) return t.quarter ? t.quarter : (t.end ? fmtDate(t.end) : '—');
+  if(t.dueRaw) return fmtDate(t.dueRaw);
+  return t.quarter ? t.quarter : '—';
+}
+
+/* Recompute the Gantt window after a date edit, mirroring the export script. */
+function recomputeDerived(t){
+  const s = t.startRaw || null, e = t.dueRaw || null;
+  if(s || e){
+    t.start = s;
+    t.end = e || s;
+    t.quarter = null;
+  }
+  // If both were cleared, the quarter fallback needs Target Quarter/Year, which
+  // only the next sync provides — leave the previous window until then.
+}
+
+/* ======================= PENDING EDITS =======================
+   A saved edit lands in Notion immediately, but data.json only catches up on the
+   next sync. Until then these overlay the loaded data so a reload doesn't appear
+   to lose the change. */
+const PENDING_KEY = 'enemaerket6-pending-edits';
+const PENDING_TTL_MS = 14*24*60*60*1000;
+let pendingEdits = {};
+
+const RAW_FIELD = {type:'type', status:'status', priority:'priority', resp:'respRaw',
+                   start:'startRaw', due:'dueRaw', hours:'hours', cost:'costRaw', note:'note'};
+
+function loadPending(){
+  try{ pendingEdits = JSON.parse(localStorage.getItem(PENDING_KEY)) || {}; }
+  catch(e){ pendingEdits = {}; }
+}
+function savePending(){
+  try{ localStorage.setItem(PENDING_KEY, JSON.stringify(pendingEdits)); }
+  catch(e){ console.error('localStorage error', e); }
+}
+function pendingKey(pageId, field){ return pageId+'|'+field; }
+
+function applyPendingEdits(){
+  loadPending();
+  const now = Date.now();
+  const byPage = new Map(TASKS.filter(t=>t.pageId).map(t=>[t.pageId, t]));
+  let changed = false;
+
+  Object.entries(pendingEdits).forEach(([key, entry])=>{
+    const [pageId, field] = key.split('|');
+    const t = byPage.get(pageId);
+    const raw = RAW_FIELD[field];
+    // Drop entries that expired, lost their task, or that the sync has caught up with.
+    if(!t || !raw || now - entry.ts > PENDING_TTL_MS){
+      delete pendingEdits[key]; changed = true; return;
+    }
+    if((t[raw] ?? null) === (entry.value ?? null)){
+      delete pendingEdits[key]; changed = true; return;
+    }
+    t[raw] = entry.value;
+    if(field==='resp') t.resp = entry.value ? RESP_LABEL[entry.value] : null;
+    if(field==='cost') t.cost = fmtCost(entry.value);
+    if(field==='start' || field==='due') recomputeDerived(t);
+  });
+
+  if(changed) savePending();
+}
+
 /* ======================= RENDER ======================= */
 let GROUPS = [];
 let rowsWrap, ganttGrid;
@@ -364,24 +485,20 @@ function render(){
       const tr = document.createElement('tr');
       const weeksForTask = taskWeeks(t).map(([k])=>k);
       tr.dataset.weeks = weeksForTask.join(',');
-      const priorityHtml = t.priority ? `<span class="prio ${t.priority}">${PRIORITY_LABEL[t.priority]||t.priority}</span>` : '—';
-      const respHtml = t.resp ? t.resp : '<span class="unset">— a definir</span>';
-      const startHtml = t.start ? fmtDate(t.start) : '—';
-      const endHtml = t.quarter ? t.quarter : (t.end ? fmtDate(t.end) : '—');
-      const hoursHtml = (t.hours===null || t.hours===undefined) ? '<span class="unset">—</span>' : t.hours+'h';
+      tr.dataset.page = t.pageId || '';
       tr.innerHTML = `
         <td class="tid">#${t.id ?? '—'}</td>
-        <td class="tname">${t.name}</td>
-        <td><span class="badge ${t.type}">${t.type||'—'}</span></td>
-        <td><span class="status-tag ${statusClass(t.status)}">${STATUS_LABEL[t.status]||t.status||'—'}</span></td>
-        <td>${priorityHtml}</td>
-        <td>${respHtml}</td>
-        <td class="mono">${startHtml}</td>
-        <td class="mono">${endHtml}</td>
-        <td class="mono">${hoursHtml}</td>
-        <td class="mono">${t.cost||'—'}</td>
-        <td class="note-cell">${t.note||''}</td>
-        <td class="comment-cell"><input type="text" data-task="${t.id}" placeholder="ex.: mudar data para..." /></td>
+        <td class="tname">${esc(t.name)}</td>
+        ${edCell(t,'type')}
+        ${edCell(t,'status')}
+        ${edCell(t,'priority')}
+        ${edCell(t,'resp')}
+        ${edCell(t,'start','mono')}
+        ${edCell(t,'due','mono')}
+        ${edCell(t,'hours','mono')}
+        ${edCell(t,'cost','mono')}
+        ${edCell(t,'note','note-cell')}
+        <td class="comment-cell"><input type="text" data-task="${t.id}" placeholder="ex.: dividir em duas tarefas" /></td>
       `;
       tbody.appendChild(tr);
     });
@@ -400,6 +517,234 @@ function render(){
   buildGantt();
   buildWeekFilter();
   initComments();
+}
+
+/* ======================= INLINE EDITING ======================= */
+/* Field list and option values must stay in step with EDITABLE in worker/worker.js —
+   the Worker rejects anything not on its own allowlist. */
+const EDIT_FIELDS = {
+  type:     {kind:'select', options:[['DIY','DIY'],['Professional','Professional'],['Admin','Admin'],['Purchase','Purchase']]},
+  status:   {kind:'select', options:[['Not Started','Não iniciada'],['In Progress','Em andamento'],['Blocked','Bloqueada'],['Done','Concluída']]},
+  priority: {kind:'select', options:[['Critical','Crítica'],['High','Alta'],['Normal','Normal'],['Low','Baixa']]},
+  resp:     {kind:'select', options:[['Ariel','Ariel'],['Natalia','Natalia'],['Contractor','Contratado'],['Both','Ariel + Natalia']]},
+  start:    {kind:'date'},
+  due:      {kind:'date'},
+  hours:    {kind:'number', step:'0.5'},
+  cost:     {kind:'number', step:'100'},
+  note:     {kind:'text'},
+};
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function cellInner(t, field){
+  switch(field){
+    case 'type':     return `<span class="badge ${esc(t.type||'')}">${esc(t.type||'—')}</span>`;
+    case 'status':   return `<span class="status-tag ${statusClass(t.status)}">${esc(STATUS_LABEL[t.status]||t.status||'—')}</span>`;
+    case 'priority': return t.priority ? `<span class="prio ${esc(t.priority)}">${esc(PRIORITY_LABEL[t.priority]||t.priority)}</span>` : '—';
+    case 'resp':     return t.resp ? esc(t.resp) : '<span class="unset">— a definir</span>';
+    case 'start':    return esc(displayStart(t));
+    case 'due':      return esc(displayDue(t));
+    case 'hours':    return (t.hours===null||t.hours===undefined) ? '<span class="unset">—</span>' : esc(t.hours)+'h';
+    case 'cost':     return esc(t.cost || '—');
+    case 'note':     return esc(t.note||'');
+    default:         return '';
+  }
+}
+
+function edCell(t, field, cls){
+  const pend = t.pageId && pendingEdits[pendingKey(t.pageId, field)] ? ' ed-pending' : '';
+  return `<td class="${cls||''}"><span class="ed${pend}" data-f="${field}">${cellInner(t,field)}</span></td>`;
+}
+
+const EDIT_KEY_STORAGE = 'enemaerket6-edit-key';
+let editKey = null;
+
+function setEditStatus(msg, cls){
+  const bar = document.getElementById('editBar');
+  if(!bar) return;
+  let st = bar.querySelector('.edit-status');
+  if(!st){ st = document.createElement('span'); bar.appendChild(st); }
+  st.className = 'edit-status '+(cls||'');
+  st.textContent = msg;
+}
+
+function renderEditBar(msg, cls){
+  const bar = document.getElementById('editBar');
+  if(!bar) return;
+  bar.innerHTML = '';
+
+  if(!WORKER_URL){
+    document.body.classList.remove('editing');
+    setEditStatus('Edição desativada — defina WORKER_URL no index.html (veja worker/README.md).');
+    return;
+  }
+
+  if(editKey){
+    document.body.classList.add('editing');
+    const out = document.createElement('button');
+    out.className = 'secondary';
+    out.textContent = 'Sair da edição';
+    out.addEventListener('click', ()=>{
+      editKey = null;
+      try{ localStorage.removeItem(EDIT_KEY_STORAGE); }catch(e){}
+      renderEditBar();
+    });
+    bar.appendChild(out);
+    setEditStatus(msg || 'Edição ativada — clique num campo sublinhado para alterá-lo.', cls || 'on');
+    return;
+  }
+
+  document.body.classList.remove('editing');
+  const inp = document.createElement('input');
+  inp.type = 'password';
+  inp.placeholder = 'Senha de edição';
+  const btn = document.createElement('button');
+  btn.textContent = 'Ativar edição';
+  const go = ()=>{
+    const v = inp.value.trim();
+    if(!v) return;
+    editKey = v;
+    try{ localStorage.setItem(EDIT_KEY_STORAGE, v); }catch(e){}
+    renderEditBar();
+  };
+  btn.addEventListener('click', go);
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter') go(); });
+  bar.appendChild(inp);
+  bar.appendChild(btn);
+  if(msg) setEditStatus(msg, cls);
+}
+
+function initEditBar(){
+  try{ editKey = localStorage.getItem(EDIT_KEY_STORAGE) || null; }catch(e){ editKey = null; }
+  renderEditBar();
+  document.getElementById('groupContainer').addEventListener('click', onCellClick);
+}
+
+function onCellClick(e){
+  if(!editKey || !WORKER_URL) return;
+  const span = e.target.closest('.ed');
+  if(!span || span.querySelector('.ed-ctl')) return;
+  const tr = span.closest('tr');
+  const pageId = tr && tr.dataset.page;
+  if(!pageId){
+    setEditStatus('Esta tarefa não tem pageId — rode a sincronização do Notion uma vez e recarregue.', 'err');
+    return;
+  }
+  openEditor(span, pageId, span.dataset.f);
+}
+
+function openEditor(span, pageId, field){
+  const spec = EDIT_FIELDS[field];
+  const t = TASKS.find(x=>x.pageId===pageId);
+  if(!spec || !t) return;
+
+  const raw = t[RAW_FIELD[field]] ?? null;
+  const original = span.innerHTML;
+  let ctl;
+
+  if(spec.kind==='select'){
+    ctl = document.createElement('select');
+    ctl.innerHTML = '<option value="">— a definir —</option>' +
+      spec.options.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join('');
+    ctl.value = raw || '';
+  }else if(spec.kind==='date'){
+    ctl = document.createElement('input');
+    ctl.type = 'date';
+    ctl.value = raw || '';
+  }else if(spec.kind==='number'){
+    ctl = document.createElement('input');
+    ctl.type = 'number'; ctl.min = '0'; ctl.step = spec.step;
+    ctl.value = (raw===null || raw===undefined) ? '' : raw;
+  }else{
+    ctl = document.createElement('input');
+    ctl.type = 'text';
+    ctl.value = raw || '';
+  }
+  ctl.className = 'ed-ctl';
+
+  let done = false;
+  const cancel = ()=>{ if(done) return; done = true; span.innerHTML = original; };
+  const commit = ()=>{
+    if(done) return; done = true;
+    let v = ctl.value;
+    v = (v === '') ? null : (spec.kind==='number' ? Number(v) : v);
+    span.innerHTML = original;
+    if((v ?? null) === (raw ?? null)) return;
+    saveField(t, field, v, span);
+  };
+
+  ctl.addEventListener('keydown', e=>{
+    if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+    else if(e.key==='Enter' && spec.kind!=='select'){ e.preventDefault(); commit(); }
+  });
+  ctl.addEventListener('blur', commit);
+  if(spec.kind==='select' || spec.kind==='date') ctl.addEventListener('change', commit);
+
+  span.innerHTML = '';
+  span.appendChild(ctl);
+  ctl.focus();
+  if(spec.kind==='text' || spec.kind==='number') ctl.select();
+}
+
+async function saveField(t, field, value, span){
+  const rawKey = RAW_FIELD[field];
+  const prev = {raw:t[rawKey] ?? null, resp:t.resp, cost:t.cost,
+                start:t.start, end:t.end, quarter:t.quarter};
+
+  span.classList.add('saving');
+  try{
+    const res = await fetch(WORKER_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'X-Edit-Key':editKey},
+      body: JSON.stringify({pageId:t.pageId, field, value})
+    });
+    let payload = {};
+    try{ payload = await res.json(); }catch(e){}
+
+    if(!res.ok){
+      if(res.status===401){
+        editKey = null;
+        try{ localStorage.removeItem(EDIT_KEY_STORAGE); }catch(e){}
+        renderEditBar(payload.error || 'Senha de edição incorreta.', 'err');
+      }
+      throw new Error(payload.error || ('HTTP '+res.status));
+    }
+
+    t[rawKey] = value;
+    if(field==='resp') t.resp = value ? RESP_LABEL[value] : null;
+    if(field==='cost') t.cost = fmtCost(value);
+    if(field==='start' || field==='due') recomputeDerived(t);
+
+    pendingEdits[pendingKey(t.pageId, field)] = {value, ts: Date.now()};
+    savePending();
+
+    span.classList.remove('saving');
+    span.classList.add('saved','ed-pending');
+    span.innerHTML = cellInner(t, field);
+    setTimeout(()=> span.classList.remove('saved'), 1200);
+
+    if(field==='start' || field==='due') refreshAfterDateChange(t, span);
+    setEditStatus('Gravado no Notion.', 'on');
+  }catch(err){
+    t[rawKey] = prev.raw; t.resp = prev.resp; t.cost = prev.cost;
+    t.start = prev.start; t.end = prev.end; t.quarter = prev.quarter;
+    span.classList.remove('saving');
+    span.classList.add('failed');
+    span.innerHTML = cellInner(t, field);
+    setTimeout(()=> span.classList.remove('failed'), 2500);
+    setEditStatus('Falha ao gravar: '+(err.message||err), 'err');
+  }
+}
+
+function refreshAfterDateChange(t, span){
+  const tr = span.closest('tr');
+  if(tr) tr.dataset.weeks = taskWeeks(t).map(([k])=>k).join(',');
+  const filter = currentWeekFilter;
+  buildGantt();
+  buildWeekFilter();
+  if(filter) applyWeekFilter(filter);
 }
 
 /* ======================= GANTT ======================= */

@@ -1,0 +1,13 @@
+name = "enemaerket6-notion-write"
+main = "worker.js"
+compatibility_date = "2026-01-15"
+
+# Origins allowed to call this Worker. The GitHub Pages site is the real one;
+# http://localhost:8000 is here so you can test the page locally with
+# `python3 -m http.server 8000` before deploying.
+[vars]
+ALLOWED_ORIGIN = "https://ariel-silvio.github.io,http://localhost:8000"
+
+# NOTION_TOKEN and EDIT_KEY are secrets, not vars — set them with:
+#   npx wrangler secret put NOTION_TOKEN
+#   npx wrangler secret put EDIT_KEY

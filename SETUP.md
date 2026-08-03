@@ -6,7 +6,8 @@ One-time setup, then it runs itself daily (and on demand).
 
 1. Go to https://www.notion.so/my-integrations → "+ New integration".
 2. Name it something like `enemaerket6-sync`. Workspace: yours.
-3. Capabilities: **Read content** only (leave Insert/Update unchecked — this script never writes to Notion).
+3. Capabilities: **Read content**. Also tick **Update content** if you want to edit the plan
+   from the webpage (see `worker/README.md`); the sync script itself only ever reads.
 4. Copy the **Internal Integration Secret** (starts with `secret_` or `ntn_`). Treat it like a password.
 
 ## 2. Share your databases with the integration
@@ -47,11 +48,19 @@ not shared with the integration).
 After that, it re-runs automatically every day at 05:30 UTC. Trigger it manually any time you
 want a fresh pull without waiting.
 
+## 6. Optional — edit the plan from the webpage
+
+By default the page is read-only. To change responsável, datas, custo, horas, status,
+prioridade, tipo and nota directly on the page and have it written into Notion, deploy the
+Cloudflare Worker in `worker/` — see **`worker/README.md`**.
+
 ## What this does and doesn't do
 
-- **One-way, read-only.** It never writes to Notion. Editing the page's comment boxes does not
-  change Notion — it only builds text for you to paste back into a chat with Claude, who edits
-  Notion directly (Notion MCP) when you ask.
+- **The sync is one-way, read-only.** `scripts/export_notion.py` never writes to Notion.
+  Writes only happen through the optional Worker above, and only for the nine fields it
+  allowlists.
+- The page's comment boxes still don't reach Notion — they save in that browser only and are
+  meant for requests that aren't a plain field edit, to paste into a chat with Claude.
 - **Two rows are silently skipped**: anything whose title starts with `[DUPLICATE` or
   `[SUPERSEDED`, and anything under a Project whose name starts with `[SUPERSEDED`.
 - **Responsible ("Assigned To") and Hours ("Est. Hours (DIY)")** are pulled as-is from Notion.
