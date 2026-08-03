@@ -3,8 +3,8 @@ name: Sync Notion → data.json
 on:
   workflow_dispatch: {}
   schedule:
-    # Daily at 05:30 UTC (~07:30 CET / 06:30 CEST). Adjust as you like.
-    - cron: "30 5 * * *"
+    # Hourly, on the hour. Cheap: only commits when data.json actually changed.
+    - cron: "0 * * * *"
 
 permissions:
   contents: write
