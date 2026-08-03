@@ -15,12 +15,19 @@ Enemærket 6, Risskov, Denmark. The audience is the couple, viewed together on a
 
 ```
 Notion (canonical source)  →  GitHub Action (scheduled + manual)  →  data.json  →  index.html
+      ↑                                                                                │
+      └──────────────  Cloudflare Worker (worker/, optional)  ←─── field edits ─────────┘
 ```
 
 Notion already runs their whole renovation project (Tasks/Projects/Milestones/Quotes/Expenses
 databases). This repo does **not** duplicate that data by hand — a script pulls it, on a
-schedule, into a JSON file the static page fetches at load time. **One-way, read-only.** Nothing
-in this repo writes back to Notion.
+schedule, into a JSON file the static page fetches at load time.
+
+The read path is one-way and always has been: `scripts/export_notion.py` never writes.
+A **separate, optional** write path was added later (see `worker/README.md`): the page can
+PATCH nine allowlisted fields back into Notion through a Cloudflare Worker that holds the
+token. Notion remains the single source of truth — there is still no second database and no
+reconciliation logic, because writes go straight to Notion rather than into a local store.
 
 ## Why this architecture (don't relitigate without reading this)
 
@@ -32,9 +39,13 @@ explicitly called out as unsustainable. Two alternatives were rejected before la
   unauthenticated; any Notion token embedded in browser JS is readable by anyone who views
   source, handing out full read/write access to the whole Notion workspace. Do not do this,
   even if it seems like the fastest fix for "make it live."
-- **Full two-way sync via a serverless function**: rejected as overkill for a household project
-  — real backend, real maintenance, not worth it here. If this changes, that's a product
-  decision for Ariel, not something to build speculatively.
+- **Full two-way sync via a serverless function**: originally rejected as overkill for a
+  household project. **Ariel later asked for it explicitly** (Natalia won't use Notion
+  directly, so edits had to happen on the page), and it now exists in `worker/` — a single
+  Cloudflare Worker doing one-field PATCHes. Note what was built and what wasn't: there is no
+  local database, no bidirectional reconciliation and no conflict resolution, because every
+  edit goes directly to Notion. Adding a real database in the middle would reintroduce exactly
+  the drift this architecture avoids — don't.
 
 Also rejected: a local `overrides.json` layer to patch in "Responsible" and "Hours" data that
 Notion doesn't have well populated. Ariel chose instead to backfill Notion itself (see Open
@@ -177,11 +188,18 @@ session. If that count changes, double check the filter still catches everything
 6. **Unused-but-available Notion fields**: `Håndværkerfradrag Eligible`, `Requires Permit`,
    `Sequence Tier`, `Milestone` relation. None are surfaced in `data.json` or the page yet.
    Possible future asks from Ariel — not committed to anything, just noting they exist.
-7. **No two-way sync exists.** The comment boxes on the page save to `localStorage` only, are
-   per-browser, and are meant to be copy-pasted into a chat with Claude, who then edits Notion
-   directly. If a future request is "make comments write to Notion automatically," that's a
-   meaningfully bigger scope (real backend, see "Why this architecture" above) — don't build it
-   silently as a small feature.
+7. **Field edits write to Notion; comments still don't.** The nine fields listed in
+   `worker/README.md` are editable on the page and PATCH straight into Notion. The separate
+   comment boxes remain `localStorage`-only and per-browser, for requests that aren't a plain
+   field edit (e.g. "split this task in two"), still meant to be copy-pasted into a chat.
+8. **`data.json` now carries `pageId` plus raw values** (`respRaw`, `costRaw`, `startRaw`,
+   `dueRaw`) alongside the display-formatted ones. The editor needs them: `resp` is translated
+   to pt-BR, `cost` is a formatted string, and `start`/`end` are derived (quarter fallback), so
+   none of those round-trip. If you add an editable field, add its raw value to the export too.
+9. **The field allowlist is duplicated on purpose** — `EDITABLE` in `worker/worker.js` and
+   `EDIT_FIELDS` in `index.html`. The Worker's copy is the security boundary and must never be
+   loosened to "whatever the page sends"; Notion silently creates new select options on write,
+   so an unvalidated value would quietly pollute the database schema.
 
 ## Style/behavioral notes worth preserving
 
