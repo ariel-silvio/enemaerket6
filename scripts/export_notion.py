@@ -216,27 +216,35 @@ def main():
     # --- Milestones: date markers (e.g. the Move-In handover) shown on the Gantt.
     # "project" is the resolved Project name, not a relation ID — the page filters
     # by it directly (e.g. == "Move-In 2026") rather than re-resolving relations.
-    milestones_raw = query_data_source(MILESTONES_DATA_SOURCE_ID, token)
-    milestones = []
-    for m in milestones_raw:
-        props = m.get("properties", {})
-        start, end = prop_date(props, "Date")
-        rel_ids = prop_relation_ids(props, "Project")
-        milestones.append({
-            "name": prop_title(props, "Name"),
-            "date": start,
-            "dateEnd": end,
-            "status": prop_select(props, "Status"),
-            "note": prop_rich_text(props, "Notes"),
-            "project": project_names.get(rel_ids[0]) if rel_ids else None,
-        })
-    milestones.sort(key=lambda x: x["date"] or "9999-12-31")
+    # Best-effort: if the Milestones database isn't shared with the integration (or
+    # any other error occurs here), don't let it block the Tasks/Projects sync above —
+    # just skip the milestones.json rewrite and leave the last-known-good file in place.
+    try:
+        milestones_raw = query_data_source(MILESTONES_DATA_SOURCE_ID, token)
+        milestones = []
+        for m in milestones_raw:
+            props = m.get("properties", {})
+            start, end = prop_date(props, "Date")
+            rel_ids = prop_relation_ids(props, "Project")
+            milestones.append({
+                "name": prop_title(props, "Name"),
+                "date": start,
+                "dateEnd": end,
+                "status": prop_select(props, "Status"),
+                "note": prop_rich_text(props, "Notes"),
+                "project": project_names.get(rel_ids[0]) if rel_ids else None,
+            })
+        milestones.sort(key=lambda x: x["date"] or "9999-12-31")
 
-    with open("milestones.json", "w", encoding="utf-8") as f:
-        json.dump(milestones, f, ensure_ascii=False, indent=2)
+        with open("milestones.json", "w", encoding="utf-8") as f:
+            json.dump(milestones, f, ensure_ascii=False, indent=2)
+        milestones_msg = f"Exported {len(milestones)} milestones."
+    except Exception as e:
+        print(f"Milestones export skipped (non-fatal): {e}", file=sys.stderr)
+        milestones_msg = "Milestones export skipped (see stderr) — kept previous milestones.json."
 
     print(f"Exported {len(tasks)} tasks, skipped {skipped} duplicate/superseded rows. "
-          f"Exported {len(milestones)} milestones.")
+          f"{milestones_msg}")
 
 
 if __name__ == "__main__":
