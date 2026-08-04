@@ -115,7 +115,10 @@
   .gantt-section h2{font-size:16px;}
   .gantt-heading button{font-size:12px;padding:6px 12px;}
   .gantt-section .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
-  .gantt-outer{border:1px solid var(--line);border-radius:4px;overflow-x:auto;background:var(--paper-card);}
+  .gantt-outer{
+    border:1px solid var(--line);border-radius:4px;background:var(--paper-card);
+    max-height:620px;overflow-x:auto;overflow-y:auto;
+  }
   .gantt-grid{position:relative;min-width:1500px;}
   .gantt-months{display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-card);z-index:2;}
   .gantt-month{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);padding:6px 0 6px 6px;border-left:1px solid var(--line);flex-shrink:0;}
@@ -134,8 +137,13 @@
     border:1.5px solid var(--accent);border-radius:4px;background:rgba(62,124,177,0.05);
   }
   .gantt-project-bracket{position:absolute;left:0;width:4px;border-radius:2px;background:var(--accent);z-index:2;pointer-events:none;}
+  .gantt-weekend-band{position:absolute;top:0;bottom:0;background:rgba(0,0,0,0.035);z-index:0;pointer-events:none;}
+  .gantt-week-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(90,98,112,0.3);z-index:0;pointer-events:none;}
   .gantt-row{display:flex;align-items:center;height:30px;position:relative;}
   .gantt-row:hover{background:rgba(0,0,0,0.02);}
+  .gantt-row.parent{background:rgba(0,0,0,0.025);}
+  .gantt-row.parent .gantt-label{font-weight:700;border-left:4px solid var(--gcolor,#999);padding-left:8px;}
+  .gantt-row.child .gantt-label{padding-left:26px;font-size:11px;color:var(--ink-soft);}
   .gantt-label{
     position:sticky;left:0;width:230px;flex-shrink:0;background:var(--paper-card);font-size:11.5px;
     padding-left:10px;padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -145,6 +153,7 @@
   .gantt-track{position:relative;flex:1;height:100%;}
   .gantt-bar{position:absolute;top:7px;height:16px;border-radius:2px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);}
   .gantt-bar:hover{filter:brightness(1.1);}
+  .gantt-bar.parent-bar{top:11px;height:8px;opacity:0.6;box-shadow:none;}
 
   .breakdown h2.section-title{font-size:18px;margin-bottom:14px;}
   .group-card{background:var(--paper-card);border:1px solid var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden;}
@@ -1059,6 +1068,29 @@ function buildGanttZoomed(){
   rowsWrap.className = 'gantt-rows';
   rowsWrap.style.width = (gridWidth+230)+'px';
 
+  // Weekend column bands and week-boundary lines, full chart height. Appended
+  // before any row so they sit behind bars regardless of the total row count,
+  // which top:0/bottom:0 doesn't need to know in advance.
+  dayCells.forEach(d=>{
+    if(d.date.getDay()!==6) return; // one band per Sat+Sun, keyed off the Saturday
+    const band = document.createElement('div');
+    band.className = 'gantt-weekend-band';
+    band.style.left = (230 + zoomDayOffset(toISODate(d.date))*ZOOM_PX_PER_DAY)+'px';
+    band.style.width = (2*ZOOM_PX_PER_DAY)+'px';
+    rowsWrap.appendChild(band);
+  });
+  for(let i=0; i<dayCells.length; ){
+    if(i>0){ // skip the chart's own left edge — a line there is redundant
+      const line = document.createElement('div');
+      line.className = 'gantt-week-line';
+      line.style.left = (230 + zoomDayOffset(toISODate(dayCells[i].date))*ZOOM_PX_PER_DAY)+'px';
+      rowsWrap.appendChild(line);
+    }
+    const key = dayCells[i].weekKey;
+    let j=i; while(j<dayCells.length && dayCells[j].weekKey===key) j++;
+    i=j;
+  }
+
   const today = new Date();
   if(today >= rangeStart && today <= rangeEnd){
     const marker = document.createElement('div');
@@ -1067,36 +1099,71 @@ function buildGanttZoomed(){
     rowsWrap.appendChild(marker);
   }
 
-  const colorByKey = Object.fromEntries(GROUPS.map(g=>[g.key, g.color]));
-
+  // Parent rows (one per Move-In group, with a thin summary bar spanning its
+  // tasks) followed by their child task rows, indented — same grouping and
+  // order as the WBS below, so this reads as that same tree, just as a Gantt.
+  const byGroup = new Map();
   moveInTasks.forEach(t=>{
-    const row = document.createElement('div');
-    row.className = 'gantt-row';
-    const label = document.createElement('div');
-    label.className = 'gantt-label';
-    label.textContent = `#${t.id} ${t.name}`;
-    label.title = t.name;
-    label.addEventListener('click', ()=> scrollToTask(t.pageId));
-    const track = document.createElement('div');
-    track.className = 'gantt-track';
-    const s = t.start||t.end, e = t.end||t.start;
-    if(s && e){
-      const left = zoomDayOffset(s)*ZOOM_PX_PER_DAY;
-      // +ZOOM_PX_PER_DAY: start/end are day boundaries, not instants — a single-day
-      // task (s===e) should still draw one full day-cell wide, not a sliver.
-      const width = Math.max((zoomDayOffset(e)-zoomDayOffset(s))*ZOOM_PX_PER_DAY, 0) + ZOOM_PX_PER_DAY;
-      const bar = document.createElement('div');
-      bar.className = 'gantt-bar';
-      bar.style.left = left+'px';
-      bar.style.width = width+'px';
-      bar.style.background = colorByKey[t.group] || 'var(--fallback)';
-      bar.title = `#${t.id} ${t.name} · ${fmtDate(s)} → ${fmtDate(e)}`;
-      bar.addEventListener('click', ()=> scrollToTask(t.pageId));
-      track.appendChild(bar);
-    }
-    row.appendChild(label);
-    row.appendChild(track);
-    rowsWrap.appendChild(row);
+    if(!byGroup.has(t.group)) byGroup.set(t.group, []);
+    byGroup.get(t.group).push(t);
+  });
+
+  GROUPS.filter(g => g.key.startsWith('MoveIn ') && byGroup.has(g.key)).forEach(g=>{
+    const tasks = byGroup.get(g.key);
+
+    const parentRow = document.createElement('div');
+    parentRow.className = 'gantt-row parent';
+    const parentLabel = document.createElement('div');
+    parentLabel.className = 'gantt-label';
+    parentLabel.style.setProperty('--gcolor', g.color);
+    parentLabel.textContent = g.label;
+    parentLabel.title = g.label;
+    parentLabel.addEventListener('click', ()=> scrollToGroup(g.key));
+    const parentTrack = document.createElement('div');
+    parentTrack.className = 'gantt-track';
+    const gStarts = tasks.map(t=>t.start||t.end), gEnds = tasks.map(t=>t.end||t.start);
+    const gStart = gStarts.reduce((a,b)=> a<b?a:b), gEnd = gEnds.reduce((a,b)=> a>b?a:b);
+    const pBar = document.createElement('div');
+    pBar.className = 'gantt-bar parent-bar';
+    pBar.style.left = (zoomDayOffset(gStart)*ZOOM_PX_PER_DAY)+'px';
+    pBar.style.width = (Math.max((zoomDayOffset(gEnd)-zoomDayOffset(gStart))*ZOOM_PX_PER_DAY,0)+ZOOM_PX_PER_DAY)+'px';
+    pBar.style.background = g.color;
+    pBar.title = g.label+' · '+fmtDate(gStart)+' → '+fmtDate(gEnd);
+    pBar.addEventListener('click', ()=> scrollToGroup(g.key));
+    parentTrack.appendChild(pBar);
+    parentRow.appendChild(parentLabel);
+    parentRow.appendChild(parentTrack);
+    rowsWrap.appendChild(parentRow);
+
+    tasks.forEach(t=>{
+      const row = document.createElement('div');
+      row.className = 'gantt-row child';
+      const label = document.createElement('div');
+      label.className = 'gantt-label';
+      label.textContent = `#${t.id} ${t.name}`;
+      label.title = t.name;
+      label.addEventListener('click', ()=> scrollToTask(t.pageId));
+      const track = document.createElement('div');
+      track.className = 'gantt-track';
+      const s = t.start||t.end, e = t.end||t.start;
+      if(s && e){
+        const left = zoomDayOffset(s)*ZOOM_PX_PER_DAY;
+        // +ZOOM_PX_PER_DAY: start/end are day boundaries, not instants — a single-day
+        // task (s===e) should still draw one full day-cell wide, not a sliver.
+        const width = Math.max((zoomDayOffset(e)-zoomDayOffset(s))*ZOOM_PX_PER_DAY, 0) + ZOOM_PX_PER_DAY;
+        const bar = document.createElement('div');
+        bar.className = 'gantt-bar';
+        bar.style.left = left+'px';
+        bar.style.width = width+'px';
+        bar.style.background = g.color;
+        bar.title = `#${t.id} ${t.name} · ${fmtDate(s)} → ${fmtDate(e)}`;
+        bar.addEventListener('click', ()=> scrollToTask(t.pageId));
+        track.appendChild(bar);
+      }
+      row.appendChild(label);
+      row.appendChild(track);
+      rowsWrap.appendChild(row);
+    });
   });
 
   ganttGrid.appendChild(rowsWrap);
