@@ -32,6 +32,7 @@ If you skip this, the sync will fail with a 404/403 — that's the usual cause.
 index.html
 groups.json
 data.json          (starts as [])
+milestones.json    (starts as [])
 scripts/export_notion.py
 .github/workflows/sync-notion.yml
 ```
@@ -40,8 +41,9 @@ Enable GitHub Pages: **Settings → Pages → Source: Deploy from a branch → m
 
 ## 5. Run the sync once, manually
 
-**Actions** tab → **Sync Notion → data.json** → **Run workflow**. It should commit an updated
-`data.json` within a few seconds. Check the Action log if it fails — the script prints the
+**Actions** tab → **Sync Notion → data.json + milestones.json** → **Run workflow**. It should
+commit an updated `data.json` (and `milestones.json`, if any milestone changed) within a few
+seconds. Check the Action log if it fails — the script prints the
 Notion API error body, which almost always tells you exactly what's wrong (usually: database
 not shared with the integration).
 

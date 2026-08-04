@@ -21,6 +21,7 @@ import urllib.error
 NOTION_VERSION = "2025-09-03"
 TASKS_DATA_SOURCE_ID = "75781ad6-ff2d-4008-980a-a533b5d23908"
 PROJECTS_DATA_SOURCE_ID = "2e510bda-e8fe-4d3a-b522-45ddbf1898b9"
+MILESTONES_DATA_SOURCE_ID = "5a389771-2e48-420e-a3b8-eb6fe072ab2f"
 
 ASSIGNED_TO_LABEL = {
     "Ariel": "Ariel",
@@ -212,7 +213,30 @@ def main():
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(tasks, f, ensure_ascii=False, indent=2)
 
-    print(f"Exported {len(tasks)} tasks, skipped {skipped} duplicate/superseded rows.")
+    # --- Milestones: date markers (e.g. the Move-In handover) shown on the Gantt.
+    # "project" is the resolved Project name, not a relation ID — the page filters
+    # by it directly (e.g. == "Move-In 2026") rather than re-resolving relations.
+    milestones_raw = query_data_source(MILESTONES_DATA_SOURCE_ID, token)
+    milestones = []
+    for m in milestones_raw:
+        props = m.get("properties", {})
+        start, end = prop_date(props, "Date")
+        rel_ids = prop_relation_ids(props, "Project")
+        milestones.append({
+            "name": prop_title(props, "Name"),
+            "date": start,
+            "dateEnd": end,
+            "status": prop_select(props, "Status"),
+            "note": prop_rich_text(props, "Notes"),
+            "project": project_names.get(rel_ids[0]) if rel_ids else None,
+        })
+    milestones.sort(key=lambda x: x["date"] or "9999-12-31")
+
+    with open("milestones.json", "w", encoding="utf-8") as f:
+        json.dump(milestones, f, ensure_ascii=False, indent=2)
+
+    print(f"Exported {len(tasks)} tasks, skipped {skipped} duplicate/superseded rows. "
+          f"Exported {len(milestones)} milestones.")
 
 
 if __name__ == "__main__":

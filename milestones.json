@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Overtagelse (Handover)",
+    "date": "2026-09-01",
+    "dateEnd": null,
+    "status": "Upcoming",
+    "note": "Keys change hands 1 Sep 2026, 12:00. All pre-handover coordination (electrician pre-alignment calls, etc.) must respect that no site visits happen before this date — seller not to be disturbed.",
+    "project": "Move-In 2026"
+  },
+  {
+    "name": "Electrical remediation complete (pre-EMBA travel)",
+    "date": "2026-10-05",
+    "dateEnd": null,
+    "status": "Upcoming",
+    "note": "Hard deadline: Ariel travels for EMBA in week 41. Natalia + Olivia will be alone in the house — fire-risk electrical defects (#1–4, #18) cannot be outstanding. Fallback: if full 24-defect remediation is slipping, prioritize closing fire-risk items only by week 37 decision point.",
+    "project": "Move-In 2026"
+  },
+  {
+    "name": "Rental handover (fraflytningssyn)",
+    "date": "2026-10-19",
+    "dateEnd": null,
+    "status": "Upcoming",
+    "note": "Target week 42/43. Full move must be complete: packing, transport (week 39), wall plug removal + patching, DIY final clean all done before this date. Landlord confirmation of exact date still outstanding.",
+    "project": "Move-In 2026"
+  },
+  {
+    "name": "Brændeovn documentation due (Miljøstyrelsen)",
+    "date": "2027-03-01",
+    "dateEnd": null,
+    "status": "Upcoming",
+    "note": "Legal deadline — brændeovn documentation must be filed with Miljøstyrelsen by this date. Requires chimney inspection to be completed first. Part of the new Chimney & Brændeovn Compliance project.",
+    "project": "Chimney & Brændeovn Compliance"
+  }
+]
