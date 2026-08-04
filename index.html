@@ -196,6 +196,8 @@
   .ed-pending::after{
     content:"•";color:var(--accent);font-weight:700;margin-left:3px;
   }
+  /* Marks a start date that falls after the deadline — almost certainly a mistake. */
+  .ed-inverted{background:#F8DAD0;color:var(--danger);font-weight:600;border-radius:2px;padding:1px 4px;}
 
   .legend{font-size:11.5px;color:var(--ink-soft);margin:18px 0 6px;line-height:1.7;}
   .legend b{color:var(--ink);}
@@ -606,9 +608,17 @@ function cellInner(t, field){
   }
 }
 
+/* True when both dates are set and the start date falls after the deadline —
+   almost certainly a data-entry mistake worth flagging, not a valid schedule. */
+function datesInverted(t){
+  return !!(t.startRaw && t.dueRaw && t.startRaw > t.dueRaw);
+}
+
 function edCell(t, field, cls){
   const pend = t.pageId && pendingEdits[pendingKey(t.pageId, field)] ? ' ed-pending' : '';
-  return `<td class="${cls||''}"><span class="ed${pend}" data-f="${field}">${cellInner(t,field)}</span></td>`;
+  const inv = (field==='start' || field==='due') && datesInverted(t);
+  const title = inv ? ' title="Prazo é antes do início — confira as datas"' : '';
+  return `<td class="${cls||''}"><span class="ed${pend}${inv?' ed-inverted':''}" data-f="${field}"${title}>${cellInner(t,field)}</span></td>`;
 }
 
 const EDIT_KEY_STORAGE = 'enemaerket6-edit-key';
@@ -805,11 +815,26 @@ function resortRowInTable(tr, t){
   tbody.insertBefore(tr, nextRow || null);
 }
 
+/* The inverted-dates highlight depends on both start and due together, so an edit
+   to either one has to refresh both cells, not just the one that was just saved. */
+function refreshDateInversionHighlight(tr, t){
+  if(!tr) return;
+  const inv = datesInverted(t);
+  ['start','due'].forEach(f=>{
+    const el = tr.querySelector(`.ed[data-f="${f}"]`);
+    if(!el) return;
+    el.classList.toggle('ed-inverted', inv);
+    if(inv) el.title = 'Prazo é antes do início — confira as datas';
+    else el.removeAttribute('title');
+  });
+}
+
 function refreshAfterDateChange(t, span){
   const tr = span.closest('tr');
   if(tr){
     tr.dataset.weeks = taskWeeks(t).map(([k])=>k).join(',');
     resortRowInTable(tr, t);
+    refreshDateInversionHighlight(tr, t);
   }
   const filter = currentWeekFilter;
   buildGantt();
