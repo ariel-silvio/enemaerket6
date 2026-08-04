@@ -139,6 +139,14 @@
   .gantt-project-bracket{position:absolute;left:0;width:4px;border-radius:2px;background:var(--accent);z-index:2;pointer-events:none;}
   .gantt-weekend-band{position:absolute;top:0;bottom:0;background:rgba(0,0,0,0.035);z-index:0;pointer-events:none;}
   .gantt-week-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(90,98,112,0.3);z-index:0;pointer-events:none;}
+  .gantt-vacation-band{position:absolute;top:0;bottom:0;background:rgba(201,162,39,0.18);z-index:0;pointer-events:none;}
+  .gantt-milestone{position:absolute;top:0;bottom:0;width:2px;background:#6B5B95;z-index:1;cursor:default;}
+  .gantt-milestone::after{
+    content:attr(data-label);position:absolute;top:-9px;left:3px;display:inline-block;
+    max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#6B5B95;
+    background:var(--paper-card);padding:0 3px;
+  }
   .gantt-row{display:flex;align-items:center;height:30px;position:relative;}
   .gantt-row:hover{background:rgba(0,0,0,0.02);}
   .gantt-row.parent{background:rgba(0,0,0,0.025);}
@@ -154,6 +162,11 @@
   .gantt-bar{position:absolute;top:7px;height:16px;border-radius:2px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,0.15);}
   .gantt-bar:hover{filter:brightness(1.1);}
   .gantt-bar.parent-bar{top:11px;height:8px;opacity:0.6;box-shadow:none;}
+  .gantt-bar .resp-tag{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:700;color:#fff;
+    text-shadow:0 1px 1px rgba(0,0,0,0.45);pointer-events:none;white-space:nowrap;overflow:hidden;
+  }
 
   .breakdown h2.section-title{font-size:18px;margin-bottom:14px;}
   .group-card{background:var(--paper-card);border:1px solid var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden;}
@@ -319,27 +332,32 @@ const WORKER_URL = "https://enemaerket6-notion-write.ariel-silvio.workers.dev";
 /* ======================= LOAD DATA ======================= */
 let GROUPS_CONFIG = [];
 let TASKS = [];
+let MILESTONES = [];
 
 async function boot(){
   try{
-    const [tasksRes, groupsRes] = await Promise.all([
+    const [tasksRes, groupsRes, milestonesRes] = await Promise.all([
       fetch('./data.json', {cache:'no-store'}),
-      fetch('./groups.json', {cache:'no-store'})
+      fetch('./groups.json', {cache:'no-store'}),
+      fetch('./milestones.json', {cache:'no-store'})
     ]);
     if(!tasksRes.ok) throw new Error('data.json: HTTP '+tasksRes.status);
     if(!groupsRes.ok) throw new Error('groups.json: HTTP '+groupsRes.status);
     TASKS = await tasksRes.json();
     GROUPS_CONFIG = await groupsRes.json();
+    // Milestones are a nice-to-have Gantt marker, not core data — missing or
+    // failed just means no markers, not a load failure for the whole page.
+    MILESTONES = milestonesRes.ok ? await milestonesRes.json() : [];
 
     document.getElementById('loadingState').style.display='none';
 
     if(!Array.isArray(TASKS) || TASKS.length===0){
       document.getElementById('syncDot').className='sync-dot stale';
-      document.getElementById('syncText').textContent='data.json está vazio — rode a GitHub Action "Sync Notion → data.json" (aba Actions, "Run workflow").';
+      document.getElementById('syncText').textContent='data.json está vazio — rode a GitHub Action "Sync Notion → data.json + milestones.json" (aba Actions, "Run workflow").';
       document.getElementById('errorState').style.display='block';
       document.getElementById('errorState').innerHTML =
         'Nenhuma tarefa encontrada em <code>data.json</code>. Isso é esperado antes da primeira sincronização — '+
-        'vá em Actions → "Sync Notion → data.json" → Run workflow, depois recarregue esta página.';
+        'vá em Actions → "Sync Notion → data.json + milestones.json" → Run workflow, depois recarregue esta página.';
       return;
     }
 
@@ -417,6 +435,7 @@ function taskWeeks(t){
 }
 
 const RESP_LABEL = {Ariel:"Ariel", Natalia:"Natalia", Contractor:"Contratado", Both:"Ariel + Natalia"};
+const RESP_INITIAL = {Ariel:"A", Natalia:"N", Contractor:"C", Both:"A+N"};
 
 /* Mirrors format_cost() in scripts/export_notion.py: 12000 -> "12.000". */
 function fmtCost(v){
@@ -871,6 +890,13 @@ const TIMELINE_END   = new Date('2028-04-15T00:00:00');
 const PX_PER_DAY = 2.6;
 const ZOOM_PX_PER_DAY = 28;
 
+const VACATION_RANGES = [
+  {start:'2026-09-02', end:'2026-09-04'},
+  {start:'2026-09-10', end:'2026-09-11'},
+  {start:'2026-09-17', end:'2026-09-18'},
+  {start:'2026-09-25', end:'2026-09-25'},
+];
+
 function dayOffset(iso){ return (new Date(iso+"T00:00:00") - TIMELINE_START)/DAY_MS_CONST; }
 
 /* The week-filter band overlay (updateGanttWeekBand) needs to position itself
@@ -885,7 +911,7 @@ function toggleGanttZoom(){
   document.getElementById('ganttZoomBtn').textContent = ganttZoomed
     ? '↩ Ver todos os grupos' : '🔍 Detalhar Projeto Move-In';
   document.getElementById('ganttHint').textContent = ganttZoomed
-    ? 'Cada barra é uma tarefa do Projeto Move-In 2026, na ordem de início — dias e semanas em detalhe. Clique numa tarefa para abri-la na lista abaixo.'
+    ? 'Cada barra é uma tarefa do Projeto Move-In 2026, agrupada por Grupo, na ordem de início — dias e semanas em detalhe. A letra na barra é o responsável (A=Ariel, N=Natalia, C=Contratado, A+N=os dois) — útil para achar conflitos de agenda. Linha roxa = marco do projeto. Faixa amarela = férias do Ariel. Clique numa tarefa ou grupo para abri-lo na lista abaixo.'
     : 'Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro. A caixa ao redor das primeiras linhas marca o Projeto Move-In 2026 — o resto são projetos independentes.';
   buildGantt();
 }
@@ -1091,6 +1117,34 @@ function buildGanttZoomed(){
     i=j;
   }
 
+  // Ariel's vacation days during the move-in window (entered 2026-08-04). Not
+  // sourced from Notion — there's no natural home for personal leave dates in
+  // the Tasks/Projects schema — so update this constant directly if they change.
+  VACATION_RANGES.forEach(v=>{
+    const vStart = new Date(v.start+'T00:00:00'), vEnd = new Date(v.end+'T00:00:00');
+    if(vEnd < rangeStart || vStart > rangeEnd) return; // outside the visible window
+    const days = Math.round((vEnd-vStart)/DAY_MS_CONST) + 1;
+    const band = document.createElement('div');
+    band.className = 'gantt-vacation-band';
+    band.style.left = (230 + zoomDayOffset(v.start)*ZOOM_PX_PER_DAY)+'px';
+    band.style.width = (days*ZOOM_PX_PER_DAY)+'px';
+    rowsWrap.appendChild(band);
+  });
+
+  // Move-In project milestones, synced from Notion's Milestones data source
+  // (see scripts/export_notion.py) — filtered to this project specifically,
+  // since e.g. the brændeovn Miljøstyrelsen deadline belongs to a different one.
+  MILESTONES
+    .filter(m => m.project === 'Move-In 2026' && m.date && m.date >= toISODate(rangeStart) && m.date <= toISODate(rangeEnd))
+    .forEach(m=>{
+      const marker = document.createElement('div');
+      marker.className = 'gantt-milestone';
+      marker.style.left = (230 + zoomDayOffset(m.date)*ZOOM_PX_PER_DAY)+'px';
+      marker.dataset.label = m.name;
+      marker.title = m.name+' · '+fmtDate(m.date)+(m.note ? ' — '+m.note : '');
+      rowsWrap.appendChild(marker);
+    });
+
   const today = new Date();
   if(today >= rangeStart && today <= rangeEnd){
     const marker = document.createElement('div');
@@ -1156,7 +1210,15 @@ function buildGanttZoomed(){
         bar.style.left = left+'px';
         bar.style.width = width+'px';
         bar.style.background = g.color;
-        bar.title = `#${t.id} ${t.name} · ${fmtDate(s)} → ${fmtDate(e)}`;
+        const respTag = RESP_INITIAL[t.respRaw];
+        bar.title = `#${t.id} ${t.name} · ${fmtDate(s)} → ${fmtDate(e)}`
+          + (respTag ? ` · ${t.resp}` : '');
+        if(respTag){
+          const tag = document.createElement('span');
+          tag.className = 'resp-tag';
+          tag.textContent = respTag;
+          bar.appendChild(tag);
+        }
         bar.addEventListener('click', ()=> scrollToTask(t.pageId));
         track.appendChild(bar);
       }

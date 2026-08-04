@@ -221,10 +221,18 @@ session. If that count changes, double check the filter still catches everything
    2027/28" and the greenhouse Project → "Estufa 2026") requires updating `groups.json`'s `key`
    to match exactly, or the group falls back to the ungraceful "grupo novo, sem cor definida"
    state until it's fixed.
-6. **Milestones aren't synced.** The hero strip at the top of `index.html` (`syncNote` area /
-   the four milestone chips in the previous single-file version — check current `index.html`,
-   this may have been simplified during the migration) still needs manual updates or a second
-   export target pulling from the Milestones data source (`5a389771-...`). Not built.
+6. **Resolved 2026-08-04**: Milestones are now synced from Notion's Milestones data source
+   (`5a389771-...`) into a second export file, `milestones.json` — `scripts/export_notion.py`
+   queries it alongside Tasks/Projects and resolves each milestone's `Project` relation to a
+   name, same pattern as tasks. They render as vertical purple markers in the zoomed Move-In
+   Gantt view (`index.html`, `buildGanttZoomed`), filtered to `project === "Move-In 2026"` —
+   there are 4 milestones total, one belongs to the Chimney project instead, and gets excluded
+   this way rather than by date-range guessing. Not wired into anything else (no hero-strip
+   chips) — just the one Gantt view, matching what was actually asked for. If you add fields to
+   a milestone in Notion, they need name matching everywhere: the export script's `properties`
+   lookup, `milestones.json`'s shape, and the JS filter/render code all reference the same
+   strings (`"Move-In 2026"`, `"Date"`, `"Project"`) — a rename in Notion breaks the filter
+   silently (0 markers, not an error) rather than loudly.
 7. **Unused-but-available Notion fields**: `Håndværkerfradrag Eligible`, `Requires Permit`,
    `Sequence Tier`, `Milestone` relation. None are surfaced in `data.json` or the page yet.
    Possible future asks from Ariel — not committed to anything, just noting they exist.
