@@ -120,6 +120,11 @@
   .gantt-rows{position:relative;padding:6px 0;}
   .gantt-today{position:absolute;top:0;bottom:0;width:1px;background:var(--danger);z-index:1;}
   .gantt-today::after{content:"hoje";position:absolute;top:-2px;left:4px;font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--danger);}
+  .gantt-project-box{
+    position:absolute;left:230px;right:6px;z-index:0;pointer-events:none;
+    border:1.5px solid var(--accent);border-radius:4px;background:rgba(62,124,177,0.05);
+  }
+  .gantt-project-bracket{position:absolute;left:0;width:4px;border-radius:2px;background:var(--accent);z-index:2;pointer-events:none;}
   .gantt-row{display:flex;align-items:center;height:30px;position:relative;}
   .gantt-row:hover{background:rgba(0,0,0,0.02);}
   .gantt-label{
@@ -264,7 +269,7 @@
 
     <div class="gantt-section">
       <h2>Visão geral — Gantt por grupo</h2>
-      <div class="hint">Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro.</div>
+      <div class="hint">Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro. A caixa ao redor das primeiras linhas marca o Projeto Move-In 2026 — o resto são projetos independentes.</div>
       <div class="gantt-outer"><div class="gantt-grid" id="ganttGrid"></div></div>
     </div>
 
@@ -817,6 +822,23 @@ function buildGantt(){
   rowsWrap.className='gantt-rows';
   rowsWrap.style.width = (gridWidth+230)+'px';
 
+  // Highlight the Move-In 2026 project's rows as one block. groups.json lists all
+  // "MoveIn X · ..." keys contiguously; only draw the box if that still holds —
+  // a gap would mean something else in groups.json broke that assumption, and a
+  // box spanning the wrong rows would be worse than no box.
+  const ROW_H = 30;
+  const moveInIdx = GROUPS.reduce((acc,g,i)=> g.key.startsWith('MoveIn ') ? [...acc,i] : acc, []);
+  const moveInContiguous = moveInIdx.length>0 && (Math.max(...moveInIdx)-Math.min(...moveInIdx)+1)===moveInIdx.length;
+  if(moveInContiguous){
+    const top = Math.min(...moveInIdx)*ROW_H;
+    const height = moveInIdx.length*ROW_H;
+    const box = document.createElement('div');
+    box.className = 'gantt-project-box';
+    box.style.top = top+'px';
+    box.style.height = height+'px';
+    rowsWrap.appendChild(box);
+  }
+
   const today = new Date();
   if(today >= TIMELINE_START && today <= TIMELINE_END){
     const marker = document.createElement('div');
@@ -851,6 +873,14 @@ function buildGantt(){
     row.appendChild(track);
     rowsWrap.appendChild(row);
   });
+
+  if(moveInContiguous){
+    const bracket = document.createElement('div');
+    bracket.className = 'gantt-project-bracket';
+    bracket.style.top = (Math.min(...moveInIdx)*ROW_H)+'px';
+    bracket.style.height = (moveInIdx.length*ROW_H)+'px';
+    rowsWrap.appendChild(bracket);
+  }
 
   ganttGrid.appendChild(rowsWrap);
 }
