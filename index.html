@@ -111,12 +111,21 @@
   .week-btn.reset{border-style:dashed;}
 
   .gantt-section{margin-bottom:30px;}
-  .gantt-section h2{font-size:16px;margin-bottom:4px;}
+  .gantt-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px;}
+  .gantt-section h2{font-size:16px;}
+  .gantt-heading button{font-size:12px;padding:6px 12px;}
   .gantt-section .hint{font-size:12px;color:var(--ink-soft);margin-bottom:12px;}
   .gantt-outer{border:1px solid var(--line);border-radius:4px;overflow-x:auto;background:var(--paper-card);}
   .gantt-grid{position:relative;min-width:1500px;}
   .gantt-months{display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-card);z-index:2;}
   .gantt-month{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);padding:6px 0 6px 6px;border-left:1px solid var(--line);flex-shrink:0;}
+  .gantt-weeks{display:flex;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper-card);z-index:2;}
+  .gantt-week-cell{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);padding:3px 0 3px 6px;border-left:1px solid var(--line);flex-shrink:0;line-height:1.3;}
+  .gantt-week-cell .wn{display:block;font-weight:600;color:var(--ink);}
+  .gantt-week-cell .wr{display:block;font-size:9px;}
+  .gantt-days{display:flex;border-bottom:1px solid var(--line);position:sticky;top:33px;background:var(--paper-card);z-index:2;}
+  .gantt-day-cell{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);text-align:center;padding:3px 0;border-left:1px solid #EEEEE8;flex-shrink:0;}
+  .gantt-day-cell.weekend{background:rgba(0,0,0,0.03);}
   .gantt-rows{position:relative;padding:6px 0;}
   .gantt-today{position:absolute;top:0;bottom:0;width:1px;background:var(--danger);z-index:1;}
   .gantt-today::after{content:"hoje";position:absolute;top:-2px;left:4px;font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--danger);}
@@ -152,6 +161,7 @@
   tbody td{padding:8px 8px;border-bottom:1px solid #EEEEE8;vertical-align:top;}
   tbody tr:last-child td{border-bottom:none;}
   tbody tr:hover{background:rgba(0,0,0,0.015);}
+  tbody tr.row-flash{background:rgba(62,124,177,0.16);transition:background 1s ease;}
   .tid{font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);}
   .tname{font-weight:500;max-width:230px;}
   .badge{font-size:10px;padding:2px 6px;border-radius:2px;font-weight:600;white-space:nowrap;}
@@ -271,8 +281,11 @@
     </div>
 
     <div class="gantt-section">
-      <h2>Visão geral — Gantt por grupo</h2>
-      <div class="hint">Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro. A caixa ao redor das primeiras linhas marca o Projeto Move-In 2026 — o resto são projetos independentes.</div>
+      <div class="gantt-heading">
+        <h2>Visão geral — Gantt por grupo</h2>
+        <button class="secondary" id="ganttZoomBtn" onclick="toggleGanttZoom()">🔍 Detalhar Projeto Move-In</button>
+      </div>
+      <div class="hint" id="ganttHint">Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro. A caixa ao redor das primeiras linhas marca o Projeto Move-In 2026 — o resto são projetos independentes.</div>
       <div class="gantt-outer"><div class="gantt-grid" id="ganttGrid"></div></div>
     </div>
 
@@ -541,6 +554,7 @@ function render(){
       const weeksForTask = taskWeeks(t).map(([k])=>k);
       tr.dataset.weeks = weeksForTask.join(',');
       tr.dataset.page = t.pageId || '';
+      if(t.pageId) tr.id = 'task-row-'+encodeURIComponent(t.pageId);
       tr.innerHTML = `
         <td class="tid">#${t.id ?? '—'}</td>
         <td class="tname">${esc(t.name)}</td>
@@ -846,12 +860,37 @@ function refreshAfterDateChange(t, span){
 const TIMELINE_START = new Date('2026-08-01T00:00:00');
 const TIMELINE_END   = new Date('2028-04-15T00:00:00');
 const PX_PER_DAY = 2.6;
+const ZOOM_PX_PER_DAY = 28;
 
 function dayOffset(iso){ return (new Date(iso+"T00:00:00") - TIMELINE_START)/DAY_MS_CONST; }
+
+/* The week-filter band overlay (updateGanttWeekBand) needs to position itself
+   correctly regardless of which view built the chart last — the overview's whole-
+   project timeline, or the zoomed Move-In view's own day-level scale. Each build
+   function points these at its own offset function and px-per-day before drawing. */
+let activeDayOffset = dayOffset, activePxPerDay = PX_PER_DAY;
+
+let ganttZoomed = false;
+function toggleGanttZoom(){
+  ganttZoomed = !ganttZoomed;
+  document.getElementById('ganttZoomBtn').textContent = ganttZoomed
+    ? '↩ Ver todos os grupos' : '🔍 Detalhar Projeto Move-In';
+  document.getElementById('ganttHint').textContent = ganttZoomed
+    ? 'Cada barra é uma tarefa do Projeto Move-In 2026, na ordem de início — dias e semanas em detalhe. Clique numa tarefa para abri-la na lista abaixo.'
+    : 'Cada barra é a janela (início do 1º item → prazo do último) de um grupo. Grupos sem data exata usam a faixa do trimestre inteiro. A caixa ao redor das primeiras linhas marca o Projeto Move-In 2026 — o resto são projetos independentes.';
+  buildGantt();
+}
 
 function buildGantt(){
   ganttGrid = document.getElementById('ganttGrid');
   ganttGrid.innerHTML='';
+  if(ganttZoomed) buildGanttZoomed();
+  else buildGanttOverview();
+}
+
+function buildGanttOverview(){
+  activeDayOffset = dayOffset;
+  activePxPerDay = PX_PER_DAY;
 
   const totalDays = (TIMELINE_END - TIMELINE_START)/DAY_MS_CONST;
   const gridWidth = totalDays*PX_PER_DAY;
@@ -948,6 +987,139 @@ function buildGantt(){
   }
 
   ganttGrid.appendChild(rowsWrap);
+}
+
+/* Zoomed view: every Move-In task as its own row, at day-level resolution, over
+   just the project's own date span (not the whole 20-month site timeline). */
+function buildGanttZoomed(){
+  const moveInTasks = TASKS.filter(t => (t.group||'').startsWith('MoveIn ') && (t.start || t.end))
+    .sort(compareTasksByDate);
+
+  if(moveInTasks.length === 0){
+    ganttGrid.innerHTML = '<div style="padding:20px;color:var(--ink-soft);font-size:13px;">Nenhuma tarefa do Move-In com data definida.</div>';
+    return;
+  }
+
+  const starts = moveInTasks.map(t=>t.start||t.end);
+  const ends = moveInTasks.map(t=>t.end||t.start);
+  const rangeStart = new Date(starts.reduce((a,b)=> a<b?a:b)+'T00:00:00');
+  const rangeEnd = new Date(ends.reduce((a,b)=> a>b?a:b)+'T00:00:00');
+  // 2 days of visual padding on each side. Asymmetric-looking (-2 / +3) because a
+  // bar's right edge already extends 1 day past its due date (see width comment
+  // below, for why) — the extra day here just cancels that back out to 2/2.
+  rangeStart.setDate(rangeStart.getDate()-2);
+  rangeEnd.setDate(rangeEnd.getDate()+3);
+
+  const zoomDayOffset = iso => (new Date(iso+"T00:00:00") - rangeStart)/DAY_MS_CONST;
+  activeDayOffset = zoomDayOffset;
+  activePxPerDay = ZOOM_PX_PER_DAY;
+
+  const gridWidth = Math.ceil((rangeEnd-rangeStart)/DAY_MS_CONST)*ZOOM_PX_PER_DAY;
+
+  // Walk day by day, grouping consecutive days that share an ISO week into one
+  // header cell — same week numbering as the "Filtrar por semana" buttons above.
+  const dayCells = [];
+  for(let cur = new Date(rangeStart); cur < rangeEnd; cur.setDate(cur.getDate()+1)){
+    const iso = getISOWeek(toISODate(cur));
+    dayCells.push({date:new Date(cur), weekKey: iso.year+'-W'+pad2(iso.week), weekMonday: iso.monday});
+  }
+
+  const weeksRow = document.createElement('div');
+  weeksRow.className = 'gantt-weeks';
+  weeksRow.style.paddingLeft = '230px';
+  const months=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  for(let i=0; i<dayCells.length; ){
+    const key = dayCells[i].weekKey;
+    let j=i; while(j<dayCells.length && dayCells[j].weekKey===key) j++;
+    const monday = dayCells[i].weekMonday;
+    const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+    const cell = document.createElement('div');
+    cell.className = 'gantt-week-cell';
+    cell.style.width = ((j-i)*ZOOM_PX_PER_DAY)+'px';
+    cell.innerHTML = `<span class="wn">Sem ${key.split('-W')[1]}</span><span class="wr">${monday.getDate()} ${months[monday.getMonth()]}–${sunday.getDate()} ${months[sunday.getMonth()]}</span>`;
+    weeksRow.appendChild(cell);
+    i=j;
+  }
+  ganttGrid.appendChild(weeksRow);
+
+  const daysRow = document.createElement('div');
+  daysRow.className = 'gantt-days';
+  daysRow.style.paddingLeft = '230px';
+  dayCells.forEach(d=>{
+    const dow = d.date.getDay();
+    const cell = document.createElement('div');
+    cell.className = 'gantt-day-cell'+((dow===0||dow===6) ? ' weekend' : '');
+    cell.style.width = ZOOM_PX_PER_DAY+'px';
+    cell.textContent = d.date.getDate();
+    daysRow.appendChild(cell);
+  });
+  ganttGrid.appendChild(daysRow);
+
+  rowsWrap = document.createElement('div');
+  rowsWrap.className = 'gantt-rows';
+  rowsWrap.style.width = (gridWidth+230)+'px';
+
+  const today = new Date();
+  if(today >= rangeStart && today <= rangeEnd){
+    const marker = document.createElement('div');
+    marker.className = 'gantt-today';
+    marker.style.left = (230 + zoomDayOffset(toISODate(today))*ZOOM_PX_PER_DAY)+'px';
+    rowsWrap.appendChild(marker);
+  }
+
+  const colorByKey = Object.fromEntries(GROUPS.map(g=>[g.key, g.color]));
+
+  moveInTasks.forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'gantt-row';
+    const label = document.createElement('div');
+    label.className = 'gantt-label';
+    label.textContent = `#${t.id} ${t.name}`;
+    label.title = t.name;
+    label.addEventListener('click', ()=> scrollToTask(t.pageId));
+    const track = document.createElement('div');
+    track.className = 'gantt-track';
+    const s = t.start||t.end, e = t.end||t.start;
+    if(s && e){
+      const left = zoomDayOffset(s)*ZOOM_PX_PER_DAY;
+      // +ZOOM_PX_PER_DAY: start/end are day boundaries, not instants — a single-day
+      // task (s===e) should still draw one full day-cell wide, not a sliver.
+      const width = Math.max((zoomDayOffset(e)-zoomDayOffset(s))*ZOOM_PX_PER_DAY, 0) + ZOOM_PX_PER_DAY;
+      const bar = document.createElement('div');
+      bar.className = 'gantt-bar';
+      bar.style.left = left+'px';
+      bar.style.width = width+'px';
+      bar.style.background = colorByKey[t.group] || 'var(--fallback)';
+      bar.title = `#${t.id} ${t.name} · ${fmtDate(s)} → ${fmtDate(e)}`;
+      bar.addEventListener('click', ()=> scrollToTask(t.pageId));
+      track.appendChild(bar);
+    }
+    row.appendChild(label);
+    row.appendChild(track);
+    rowsWrap.appendChild(row);
+  });
+
+  ganttGrid.appendChild(rowsWrap);
+}
+
+/* Opens the task's group card (if needed) and scrolls to its row in the WBS,
+   with a brief highlight flash so it's easy to spot after the jump. */
+function scrollToTask(pageId){
+  if(!pageId) return;
+  const tr = document.getElementById('task-row-'+encodeURIComponent(pageId));
+  if(!tr) return;
+  const card = tr.closest('.group-card');
+  if(card){
+    const header = card.querySelector('.group-header');
+    const body = card.querySelector('.group-body');
+    if(header && !header.classList.contains('open')){
+      header.classList.add('open');
+      body.classList.add('open');
+    }
+  }
+  tr.scrollIntoView({behavior:'smooth', block:'center'});
+  tr.classList.add('row-flash');
+  setTimeout(()=> tr.classList.remove('row-flash'), 1200);
 }
 
 function scrollToGroup(key){
@@ -1065,8 +1237,8 @@ function updateGanttWeekBand(weekKey){
   if(!weekKey || !rowsWrap) return;
   const info = weekMap.get(weekKey);
   if(!info) return;
-  const left = 230 + dayOffset(toISODate(info.monday))*PX_PER_DAY;
-  const width = 7*PX_PER_DAY;
+  const left = 230 + activeDayOffset(toISODate(info.monday))*activePxPerDay;
+  const width = 7*activePxPerDay;
   weekBandEl = document.createElement('div');
   Object.assign(weekBandEl.style, {
     position:'absolute', top:'0', bottom:'0', left:left+'px', width:width+'px',
