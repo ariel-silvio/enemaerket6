@@ -16,9 +16,12 @@ Notion integrations can't see anything until you explicitly connect them:
 
 1. Open the **Tasks** database in Notion (full page, not the linked view).
 2. `•••` menu (top right) → **Connections** → add `enemaerket6-sync`.
-3. Repeat for the **Projects** database.
+3. Repeat for the **Projects** database, and for the **Milestones** database.
 
-If you skip this, the sync will fail with a 404/403 — that's the usual cause.
+If you skip this, the sync will fail with a 404/403 — that's the usual cause. Tasks/Projects
+failures block the whole sync (nothing gets committed); a Milestones sharing gap is non-fatal —
+the script logs a warning and skips just the `milestones.json` rewrite, keeping the last-known
+file in place.
 
 ## 3. Add the token as a GitHub secret
 
