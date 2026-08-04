@@ -195,11 +195,18 @@ session. If that count changes, double check the filter still catches everything
 3. **Check whether `Assigned To` has been backfilled** in Notion. If `data.json` still shows
    mostly-null `resp` fields after a real sync, that's expected and not a bug — it means Ariel
    hasn't finished the backfill he committed to.
-4. **`#83` (Vindstød registration) and any other "pre-move-in" tasks** don't have a matching
-   `Group` option in Notion (there's no `Pré-mudança` select value) — they'll fall into the
-   generic `Move-In 2026` bucket in `groups.json`. This was flagged as a known gap, not fixed.
-   If Ariel wants that distinction back, it needs a new Group select option added in Notion,
-   not a code-side patch.
+4. **Resolved 2026-08-04**: a `MoveIn Pré · Pré-Mudança` Group option now exists in Notion
+   (added via `ALTER COLUMN "Group" SET SELECT(...)` on the Tasks data source — the Notion API
+   version in use here does **not** auto-create select options from a page write like the
+   Worker's code comments assumed; the option has to exist on the schema first, or the write
+   is rejected with a 400). It's assigned to the four electrical-scheduling tasks that happen
+   *before* the Sept 1 handover and need the seller's pre-handover access — #55, #56, #64, #85
+   — split out from `MoveIn C · Elétrica`, which now holds only the post-handover execution
+   tasks (#57–59, #65). `groups.json` has a matching entry, placed first in the array so it
+   renders before Grupo A. `#83` (Vindstød registration) was considered but deliberately left
+   in `MoveIn B · Semana 1 Limpeza` — it's paperwork, not a contractor contact, so it didn't fit
+   the "contact contractors" framing this group was created for. Revisit if Ariel wants it moved
+   too.
 5. **Milestones aren't synced.** The hero strip at the top of `index.html` (`syncNote` area /
    the four milestone chips in the previous single-file version — check current `index.html`,
    this may have been simplified during the migration) still needs manual updates or a second
