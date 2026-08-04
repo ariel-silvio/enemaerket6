@@ -471,6 +471,27 @@ function applyPendingEdits(){
   if(changed) savePending();
 }
 
+/* Sorts a group's task rows by start date, then due date, ascending. Uses the raw
+   Notion values (same ones the Início/Prazo columns display), not the quarter-derived
+   Gantt range, so this matches what the user actually sees in those two columns.
+   Tasks with neither date (quarter-only or fully undated) sort last, by task ID. */
+function taskDateForSort(t, field){
+  const raw = field==='start' ? t.startRaw : t.dueRaw;
+  return raw !== undefined ? raw : (field==='start' ? t.start : t.end);
+}
+function compareTasksByDate(a, b){
+  const aStart = taskDateForSort(a,'start') || null, aDue = taskDateForSort(a,'due') || null;
+  const bStart = taskDateForSort(b,'start') || null, bDue = taskDateForSort(b,'due') || null;
+  const aUndated = !aStart && !aDue, bUndated = !bStart && !bDue;
+  if(aUndated !== bUndated) return aUndated ? 1 : -1;
+  if(aUndated) return (a.id??0) - (b.id??0);
+  const aPrimary = aStart || aDue, bPrimary = bStart || bDue;
+  if(aPrimary !== bPrimary) return aPrimary < bPrimary ? -1 : 1;
+  const aSecondary = aDue || aStart, bSecondary = bDue || bStart;
+  if(aSecondary !== bSecondary) return aSecondary < bSecondary ? -1 : 1;
+  return (a.id??0) - (b.id??0);
+}
+
 /* ======================= RENDER ======================= */
 let GROUPS = [];
 let rowsWrap, ganttGrid;
@@ -488,7 +509,7 @@ function render(){
   container.innerHTML = '';
 
   GROUPS.forEach(g=>{
-    const tasks = TASKS.filter(t=>t.group===g.key);
+    const tasks = TASKS.filter(t=>t.group===g.key).sort(compareTasksByDate);
     const card = document.createElement('div');
     card.className='group-card';
 
@@ -768,9 +789,26 @@ async function saveField(t, field, value, span){
   }
 }
 
+/* Moves a just-edited row to where it now belongs, date-sort-wise, within its own
+   table body — without a full re-render, which would collapse open group cards and
+   lose in-progress comment input text. */
+function resortRowInTable(tr, t){
+  const tbody = tr.parentElement;
+  if(!tbody) return;
+  tbody.removeChild(tr);
+  const nextRow = [...tbody.children].find(row=>{
+    const other = TASKS.find(x=>x.pageId===row.dataset.page);
+    return other && compareTasksByDate(t, other) < 0;
+  });
+  tbody.insertBefore(tr, nextRow || null);
+}
+
 function refreshAfterDateChange(t, span){
   const tr = span.closest('tr');
-  if(tr) tr.dataset.weeks = taskWeeks(t).map(([k])=>k).join(',');
+  if(tr){
+    tr.dataset.weeks = taskWeeks(t).map(([k])=>k).join(',');
+    resortRowInTable(tr, t);
+  }
   const filter = currentWeekFilter;
   buildGantt();
   buildWeekFilter();
