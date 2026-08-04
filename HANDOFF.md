@@ -203,29 +203,47 @@ session. If that count changes, double check the filter still catches everything
    *before* the Sept 1 handover and need the seller's pre-handover access — #55, #56, #64, #85
    — split out from `MoveIn C · Elétrica`, which now holds only the post-handover execution
    tasks (#57–59, #65). `groups.json` has a matching entry, placed first in the array so it
-   renders before Grupo A. `#83` (Vindstød registration) was considered but deliberately left
-   in `MoveIn B · Semana 1 Limpeza` — it's paperwork, not a contractor contact, so it didn't fit
-   the "contact contractors" framing this group was created for. Revisit if Ariel wants it moved
-   too.
-5. **Milestones aren't synced.** The hero strip at the top of `index.html` (`syncNote` area /
+   renders before Grupo A. `#83` (Vindstød registration) was initially left in
+   `MoveIn B · Semana 1 Limpeza` since it's paperwork, not a contractor contact — Ariel asked
+   for it to move into Pré-Mudança too on the same day, so it now does.
+5. **`Group` is Move-In-project-only; other Projects use their own name as the grouping
+   instead** (2026-08-04 clarification from Ariel: "mantemos o Grupo G apenas para o Projeto
+   Move-in"). Concretely: if a task belongs to the Move-In 2026 Project, give it one of the
+   `MoveIn X · ...` Group values. If a task is its own standalone thing — a later-phase
+   enhancement, a different room's project — it should get its **own Project** in Notion with
+   `Group` left empty, and `groups.json` gets a new entry keyed by that Project's exact `Name`
+   (this is the `group_key = group if group else (project_name or "Sem grupo")` fallback in
+   `scripts/export_notion.py`). Example done this way: `#29` (the balustrade cap-rail task) was
+   split out of `MoveIn G · Entrada` into a new "Entrada 2027" Project, because it's an explicit
+   phase-2 task meant to happen well after the move-in checklist, not alongside it — its sibling
+   `#30` (painting the balustrade) stayed in Grupo G since that one is actual move-in prep.
+   Renaming an existing Project's `Name` (done the same day for "Kitchen" → "Cozinha Nova
+   2027/28" and the greenhouse Project → "Estufa 2026") requires updating `groups.json`'s `key`
+   to match exactly, or the group falls back to the ungraceful "grupo novo, sem cor definida"
+   state until it's fixed.
+6. **Milestones aren't synced.** The hero strip at the top of `index.html` (`syncNote` area /
    the four milestone chips in the previous single-file version — check current `index.html`,
    this may have been simplified during the migration) still needs manual updates or a second
    export target pulling from the Milestones data source (`5a389771-...`). Not built.
-6. **Unused-but-available Notion fields**: `Håndværkerfradrag Eligible`, `Requires Permit`,
+7. **Unused-but-available Notion fields**: `Håndværkerfradrag Eligible`, `Requires Permit`,
    `Sequence Tier`, `Milestone` relation. None are surfaced in `data.json` or the page yet.
    Possible future asks from Ariel — not committed to anything, just noting they exist.
-7. **Field edits write to Notion; comments still don't.** The nine fields listed in
+8. **Field edits write to Notion; comments still don't.** The nine fields listed in
    `worker/README.md` are editable on the page and PATCH straight into Notion. The separate
    comment boxes remain `localStorage`-only and per-browser, for requests that aren't a plain
    field edit (e.g. "split this task in two"), still meant to be copy-pasted into a chat.
-8. **`data.json` now carries `pageId` plus raw values** (`respRaw`, `costRaw`, `startRaw`,
+9. **`data.json` now carries `pageId` plus raw values** (`respRaw`, `costRaw`, `startRaw`,
    `dueRaw`) alongside the display-formatted ones. The editor needs them: `resp` is translated
    to pt-BR, `cost` is a formatted string, and `start`/`end` are derived (quarter fallback), so
    none of those round-trip. If you add an editable field, add its raw value to the export too.
-9. **The field allowlist is duplicated on purpose** — `EDITABLE` in `worker/worker.js` and
-   `EDIT_FIELDS` in `index.html`. The Worker's copy is the security boundary and must never be
-   loosened to "whatever the page sends"; Notion silently creates new select options on write,
-   so an unvalidated value would quietly pollute the database schema.
+10. **The field allowlist is duplicated on purpose** — `EDITABLE` in `worker/worker.js` and
+    `EDIT_FIELDS` in `index.html`. The Worker's copy is the security boundary and must never be
+    loosened to "whatever the page sends". Validate anyway: **correction to an earlier version
+    of this note** — Notion does *not* silently create new select options on a page write (see
+    item 4 above); an unknown select value is rejected outright with a 400. The real risk of a
+    loosened allowlist is smaller than originally thought, but still real: a typo'd-but-existing
+    option value would silently misfile a task, and any other field kind (date, number, text)
+    has no such guardrail at all.
 
 ## Style/behavioral notes worth preserving
 

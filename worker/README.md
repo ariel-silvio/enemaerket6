@@ -103,8 +103,11 @@ It only ever writes these nine properties, and only to values it recognises:
 | note | Notes | up to 2000 characters |
 
 Any other field name, or a select value outside these lists, is rejected before Notion is
-called. This matters because Notion silently creates a new select option on write — without
-the allowlist, one typo would add a junk option to the database schema.
+called. Notion's own API also rejects an unrecognised select value (400, not a silent
+auto-create — verified against a live database), so a typo in one of these can't corrupt the
+schema either way. The allowlist's real job is restricting which properties can be touched at
+all — Notion would happily accept a write to any property otherwise — and validating dates,
+numbers, and text, which have no schema-level guardrail the way selects do.
 
 It also refuses requests from any origin other than those in `ALLOWED_ORIGIN`
 (`wrangler.toml`), rejects anything without the right passphrase, and requires the page ID

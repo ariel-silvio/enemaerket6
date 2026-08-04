@@ -18,8 +18,11 @@ const MAX_BODY_BYTES = 8 * 1024;
 
 /**
  * Only these Notion properties can ever be written, and selects only accept values
- * from their list. Notion silently creates a new select option on write, so an
- * unvalidated value would quietly pollute the database schema with typos.
+ * from their list. Notion's API (2025-09-03) rejects an unrecognised select value
+ * outright with a 400 rather than creating it — verified 2026-08-04, contradicting
+ * an earlier assumption here — but the allowlist still matters: it's the only thing
+ * restricting which properties can be touched at all, and date/number/text fields
+ * have no schema-level guardrail the way selects do.
  */
 const EDITABLE = {
   type: { prop: "Type", kind: "select", options: ["DIY", "Professional", "Admin", "Purchase"] },
