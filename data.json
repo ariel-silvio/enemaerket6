@@ -511,7 +511,7 @@
     "end": "2026-10-30",
     "quarter": null,
     "cost": "—",
-    "hours": null,
+    "hours": 0,
     "note": "Defeito já identificado no tilstandsrapport. Precisa acontecer antes de pintar a parede da chaminé e antes de usar o brændeovn. Agrupar com a inspeção da chaminé (#3). Pedir ao skorstensfejer ou murermester um orçamento dos dois juntos.",
     "group": "Chimney & Brændeovn Compliance",
     "respRaw": "Contractor",
