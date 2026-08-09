@@ -1718,5 +1718,25 @@
     "startRaw": null,
     "dueRaw": "2026-09-25",
     "costRaw": null
+  },
+  {
+    "id": 96,
+    "pageId": "3b79bb54-e743-8124-abdb-c8df1e5e8f45",
+    "name": "Limpar fuglekasse na cerejeira brava (jardim dos fundos)",
+    "type": "DIY",
+    "status": "Not Started",
+    "priority": "Low",
+    "resp": "Ariel",
+    "start": "2026-10-01",
+    "end": "2026-12-31",
+    "quarter": "Q4 2026",
+    "cost": "—",
+    "hours": 1,
+    "note": "Fuglekasse (caixa de ninho, provavelmente blåmejse/musvit) montada no tronco da cerejeira brava (Prunus avium) no jardim dos fundos. Limpar ninho velho de dentro — reduz parasitas para a próxima temporada de nidificação. Janela: final do outono até janeiro (fora da temporada de reprodução). Não tem relação com a poda da árvore — apenas abrir/esvaziar a caixa, sem contato com tecido vivo da árvore, então nenhum risco de sølvskimmel.",
+    "group": "Garden 2026 — Pre-Winter",
+    "respRaw": "Ariel",
+    "startRaw": null,
+    "dueRaw": null,
+    "costRaw": null
   }
 ]
