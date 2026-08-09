@@ -162,22 +162,22 @@
   {
     "id": 12,
     "pageId": "3a69bb54-e743-810f-9bac-e59faabc726a",
-    "name": "Inventário de chaves + recodificação da porta da frente",
-    "type": "Professional",
+    "name": "Substituição DIY de 3 cilindros (porta frente + porão + caixa de correio) — chave única",
+    "type": "DIY",
     "status": "Not Started",
     "priority": "High",
     "resp": "Ariel",
     "start": "2026-09-02",
     "end": "2026-09-06",
     "quarter": null,
-    "cost": "1.400",
+    "cost": "648",
     "hours": 2,
-    "note": "PRIMEIRO PASSO (dia 1/semana 1, grátis): checar se a casa já tem um sistema de chaves compartilhado. (1) testar a chave da porta da frente na porta do porão — se abrir, já estão no mesmo sistema. (2) checar a marca no rosto do cilindro (ASSA, Ruko, LAAS, Trioving, Kaba, IKON). (3) perguntar à vendedora se há um systemkort/nøglekort — juntar com #14. Se houver sistema com cartão: NÃO chamar um låsesmed genérico — só o revendedor autorizado daquela marca. Se não houver sistema: lásesmed faz \"ens nøgle\" para as 3 fechaduras. Preços Aros Låse (aros-laase.dk/priser, checado 02/ago): omkodning Ruko 6-stift ou Abus Zolit incl. 3 chaves = 950 kr (só se for uma dessas marcas); +300 kr por fechadura extra recodificada junto (porão + postkasse = +600 kr, SE forem recodificáveis); +60 kr por chave extra além das 3; senão, 725 kr/hora. Não cobre se precisar do serviço de systemnøgle (chave de sistema) — isso é cotado à parte. Estimativa grosseira se Ruko/Abus Zolit + ambas recodificáveis: ~1.550 kr. Provavelmente NÃO elegível a håndværkerfradrag.",
+    "note": "DECISÃO (09/ago): via DIY em vez de Aros Låse. Kit Ruko Sampak 2x RD1660 (porta frente + porão) + 1x RD1607 (caixa de correio), rustfrit look, 648 kr em lavpris-laase.dk (produto 6254976754). ATENÇÃO ao finalizar compra: marcar a opção de omkodning/recodificação no carrinho para que os 3 cilindros compartilhem a mesma chave — se não marcar, o site avisa que cada cilindro pode vir com código aleatório de fábrica e chaves diferentes. Recodificação Ruko leva 3-5 dias úteis extra (Abus 3-7). Confirmar antes de comprar: (1) quantidade de chaves incluídas no pack — não especificado na página do produto, família precisa de pelo menos 3; (2) que porta da frente e porão usam cilindro oval padrão Ruko (não perfil europeu) — checar formato do cilindro atual; (3) custo de 648 kr é só o pack — taxa de recodificação aparece separada no carrinho. Economia vs. Aros Låse: ~900 kr.\n\n---\n\nCONTEXTO ORIGINAL (mantido para histórico):\nPRIMEIRO PASSO (dia 1/semana 1, grátis): checar se a casa já tem um sistema de chaves compartilhado. (1) testar a chave da porta da frente na porta do porão — se abrir, já estão no mesmo sistema. (2) checar a marca no rosto do cilindro (ASSA, Ruko, LAAS, Trioving, Kaba, IKON). (3) perguntar à vendedora se há um systemkort/nøglekort — juntar com #14. Se houver sistema com cartão: NÃO chamar um låsesmed genérico — só o revendedor autorizado daquela marca. Se não houver sistema: lásesmed faz \"ens nøgle\" para as 3 fechaduras. Preços Aros Låse (aros-laase.dk/priser, checado 02/ago): omkodning Ruko 6-stift ou Abus Zolit incl. 3 chaves = 950 kr (só se for uma dessas marcas); +300 kr por fechadura extra recodificada junto (porão + postkasse = +600 kr, SE forem recodificáveis); +60 kr por chave extra além das 3; senão, 725 kr/hora. Não cobre se precisar do serviço de systemnøgle (chave de sistema) — isso é cotado à parte. Estimativa grosseira se Ruko/Abus Zolit + ambas recodificáveis: ~1.550 kr. Provavelmente NÃO elegível a håndværkerfradrag.",
     "group": "MoveIn B · Semana 1 Limpeza",
     "respRaw": "Ariel",
     "startRaw": "2026-09-02",
     "dueRaw": "2026-09-06",
-    "costRaw": 1400
+    "costRaw": 648
   },
   {
     "id": 13,
