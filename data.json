@@ -1818,5 +1818,25 @@
     "startRaw": null,
     "dueRaw": null,
     "costRaw": null
+  },
+  {
+    "id": 101,
+    "pageId": "3d09bb54-e743-81e2-919e-f00d1014f9f5",
+    "name": "Identificar/documentar circuito trifasico CEE + submedidor PM710 (possivel ponto EV antigo)",
+    "type": "Professional",
+    "status": "Not Started",
+    "priority": "Normal",
+    "resp": "Contratado",
+    "start": "2026-07-01",
+    "end": "2026-09-30",
+    "quarter": "Q3 2026",
+    "cost": "0",
+    "hours": null,
+    "note": "Encontrado na triagem de itens: soquete industrial CEE vermelho (3 fases) + medidor Schneider/Merlin Gerin PowerLogic PM710 externo, mostrando carga ativa (394V / 15A / ~11kW). Circuito nao documentado no tilstandsrapport nem no elinstallationsrapport. Anotacoes manuscritas de leitura kWh coladas ao lado sugerem uso anterior para carregar um BMW i3 (provavelmente dono anterior). Casa e car-free hoje, entao nao e urgente, mas deve ser identificado pelo elinstallator na visita ja agendada: (1) confirmar destino do circuito e disjuntor correspondente, (2) verificar presenca de fejlstromsafbryder tipo B (exigido para carregamento EV, provavelmente ausente em soquete CEE generico), (3) registrar formalmente ja que nao consta em nenhum dos dois laudos existentes.",
+    "group": "Move-In 2026",
+    "respRaw": "Contractor",
+    "startRaw": null,
+    "dueRaw": null,
+    "costRaw": 0
   }
 ]
