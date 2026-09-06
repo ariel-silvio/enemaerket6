@@ -175,6 +175,7 @@
   .group-header .chev{font-size:11px;transition:transform .15s;color:var(--ink-soft);width:12px;}
   .group-header.open .chev{transform:rotate(90deg);}
   .group-header .gtitle{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;flex:1;}
+  .group-header .ginprog{font-size:10.5px;font-family:'IBM Plex Mono',monospace;font-weight:600;background:#DCE9F5;color:var(--accent);padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;}
   .group-header .gprogress-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .group-header .gprogress-track{width:70px;height:6px;border-radius:3px;background:rgba(0,0,0,0.09);overflow:hidden;}
   .group-header .gprogress-fill{display:block;height:100%;background:var(--gcolor,#999);border-radius:3px;transition:width .25s ease;}
@@ -566,8 +567,10 @@ function render(){
     header.style.setProperty('--gcolor', g.color);
     header.id = 'group-'+encodeURIComponent(g.key);
     const doneCount = tasks.filter(t=>t.status==='Done').length;
+    const inProgCount = tasks.filter(t=>t.status==='In Progress').length;
     const pct = tasks.length ? Math.round(doneCount/tasks.length*100) : 0;
     header.innerHTML = `<span class="chev">▶</span><span class="gtitle">${g.label}</span>
+      <span class="ginprog" style="${inProgCount ? '' : 'display:none'}">${inProgCount} em andamento</span>
       <span class="gprogress-wrap" title="${doneCount} de ${tasks.length} concluídas (${pct}%)">
         <span class="gprogress-track"><span class="gprogress-fill" style="width:${pct}%"></span></span>
         <span class="gprogress-label">${doneCount}/${tasks.length}</span>
@@ -886,14 +889,20 @@ function updateGroupProgress(t){
   if(!header) return;
   const groupTasks = TASKS.filter(x=>x.group===t.group);
   const done = groupTasks.filter(x=>x.status==='Done').length;
+  const inProg = groupTasks.filter(x=>x.status==='In Progress').length;
   const total = groupTasks.length;
   const pct = total ? Math.round(done/total*100) : 0;
   const fill = header.querySelector('.gprogress-fill');
   const label = header.querySelector('.gprogress-label');
   const wrap = header.querySelector('.gprogress-wrap');
+  const inprog = header.querySelector('.ginprog');
   if(fill) fill.style.width = pct+'%';
   if(label) label.textContent = `${done}/${total}`;
   if(wrap) wrap.title = `${done} de ${total} concluídas (${pct}%)`;
+  if(inprog){
+    inprog.textContent = `${inProg} em andamento`;
+    inprog.style.display = inProg ? '' : 'none';
+  }
 }
 
 function refreshAfterDateChange(t, span){
