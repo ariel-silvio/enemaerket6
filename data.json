@@ -1838,5 +1838,25 @@
     "startRaw": null,
     "dueRaw": null,
     "costRaw": 0
+  },
+  {
+    "id": 102,
+    "pageId": "3d59bb54-e743-8181-a119-c15d1f2044d8",
+    "name": "Arredondar cantos dos degraus da escada (router, raio 3-6mm)",
+    "type": "DIY",
+    "status": "Not Started",
+    "priority": "Low",
+    "resp": "Ariel",
+    "start": "2026-10-01",
+    "end": "2026-12-31",
+    "quarter": "Q4 2026",
+    "cost": "700",
+    "hours": 3,
+    "note": "Round-over bit (afrundingsfræser, radius 3-6mm) on trim router, nosing edge only. Test cut on scrap/hidden edge first. Corners near wall/stringer finished by hand (rasp + sandpaper). Sand 120→220, re-oil/lacquer after (Osmo Polyx, matches handrail cap plan). Use lower sheen (glans 10-20) on tread tops for slip safety, not glans 40 like balusters/handrail. Est. cost assumes trim router purchase (~400-800 DKK) since not in current tool list — flag if Ariel already owns one, cost drops to ~150-300 DKK (bit only). Sequenced with staircase repaint (balusters + handrail cap) after electrical remediation.",
+    "group": "Ground Floor Finishing",
+    "respRaw": "Ariel",
+    "startRaw": null,
+    "dueRaw": null,
+    "costRaw": 700
   }
 ]
