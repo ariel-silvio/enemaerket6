@@ -1858,5 +1858,25 @@
     "startRaw": null,
     "dueRaw": null,
     "costRaw": 700
+  },
+  {
+    "id": 103,
+    "pageId": "3ee9bb54-e743-8191-ab5e-e0b59bdd9e99",
+    "name": "Buy lawn mower — Einhell GE-CM 36/47 S HW kit (Proshop)",
+    "type": "Purchase",
+    "status": "Done",
+    "priority": "Low",
+    "resp": "Ariel",
+    "start": "2026-10-04",
+    "end": "2026-10-04",
+    "quarter": null,
+    "cost": "5.392",
+    "hours": null,
+    "note": "Self-propelled 36V (2x18V) Power X-Change, 47 cm, 75 L collector, bioclip adapter; kit incl. 4x4 Ah batteries + 2 chargers. Proshop order 69663710, paid 5,392 kr (confirmed from order email). Expected delivery 14 Oct 2026 via Danske Fragtmænd (half-pallet, delivery without signature — parcel may be left at the address; you are responsible once delivered). Silvan alternative (4,463 kr) had no stock, so Proshop order stands. 14-day withdrawal right runs from receipt. Charge batteries indoors only (not garage/basement fyrrum — fire-risk electrical #22/#21). Mower may be stored in garage (informal use).",
+    "group": "Garden 2026 — Pre-Winter",
+    "respRaw": "Ariel",
+    "startRaw": "2026-10-04",
+    "dueRaw": null,
+    "costRaw": 5392
   }
 ]
