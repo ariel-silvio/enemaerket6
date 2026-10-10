@@ -1878,5 +1878,25 @@
     "startRaw": "2026-10-04",
     "dueRaw": null,
     "costRaw": 5392
+  },
+  {
+    "id": 104,
+    "pageId": "3f59bb54-e743-81b8-a032-ca3637fa18d3",
+    "name": "Verify DHW temperature and legionella setting (Trend IQ3xcite)",
+    "type": "DIY",
+    "status": "Not Started",
+    "priority": "Normal",
+    "resp": "Ariel",
+    "start": "2026-10-01",
+    "end": "2026-12-31",
+    "quarter": "Q4 2026",
+    "cost": "0",
+    "hours": 1,
+    "note": "Read-only check, no settings changed. Trend IQ3xcite 'Uc oversigt' (10 Oct 2026): DHW sensor S2 45.6 C vs day setpoint K2 46 C; VV return S3 40.9 C; FJV supply S1 65.2 C, FJV return 36.0 C (tag not visible in photo), FJV Afkoeling S5 29.2 (calculated dT); circ pump D1 On, VV valve D2 On; Legionella protection W1 Off, kill run Z2 Off, kill temp K4 65 C. TO DO: (1) measure tap temperature with thermometer after running hot; (2) find night setpoint, Z1/Z2 schedule times, alarm list, trend/log pages on touchscreen; (3) photo of heat exchanger/tank label (flow-through vs tank decides legionella risk); (4) check AffaldVarme tariff for cooling bonus/penalty before raising setpoint. Optional: VVS-installator check ~800-1,500 DKK. K3 'Koeretid VV pumpe' 150 s is unconfirmed (maybe valve run time). Project is On Hold; this task is not blocked by basement moisture (informal use, PROTOCOLS #9).",
+    "group": "Heating & Energy",
+    "respRaw": "Ariel",
+    "startRaw": null,
+    "dueRaw": null,
+    "costRaw": 0
   }
 ]
